@@ -19,11 +19,11 @@ struct HermitianMatrix{T <: Union{Complex{Float64}, Float64}}
 end
 
 event(system::Matrix, e::Matrix) = (e * system * e) / trace(e * system)
-event(system::HermitianMatrix, e::Matrix) = HermitianMatrix(event(system.p, e))
+event(system::HermitianMatrix, e::Matrix) = HermitianMatrix(event(system.matrix, e))
 
 HermitianMatrix{T <: Union{Complex{Float64}, Float64}}(p::Matrix{T}) = HermitianMatrix{T}(length(diag(p)),p)
 HermitianMatrix{T <: Union{Complex{Float64}, Float64}}(v::Vector{T}) = HermitianMatrix{T}(length(v), diagm(v))
 # TODO - construtor from integer (K => diagonal of 1/k)
 
 Base.convert(::Type{HermitianMatrix}, m::Matrix) = HermitianMatrix(m)
-Base.convert(::Type{Matrix}, hm::HermitianMatrix) = hm.p
+Base.convert(::Type{Matrix}, hm::HermitianMatrix) = hm.matrix
