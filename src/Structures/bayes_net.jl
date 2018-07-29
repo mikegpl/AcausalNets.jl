@@ -7,6 +7,7 @@ quantum_bayesian:
 using LightGraphs
 import AcausalNets.Systems:
     DiscreteSystem,
+    expand_parents,
     enforce_parents_order,
     parents,
     variables,
@@ -17,29 +18,30 @@ import Compat.Iterators: flatten
 const DAG = DiGraph
 
 struct DiscreteBayesNet{T <: DiscreteSystem}
-    dag         ::DAG
-    systems     ::Vector{T}
+    dag             ::DAG
+    systems         ::Vector{T}
+
     DiscreteBayesNet{S}(::Type{S}) where {S <: DiscreteSystem} = new(DAG(0), S[])
 end
+
+
+# Returns the index of dbn's DAG node which represents the variable
+variable_to_node(dbn::DiscreteBayesNet, v::Variable) = findfirst((sys -> v in sys.variables), dbn.systems)
 
 systems(dbn::DiscreteBayesNet) = dbn.systems
 variables(dbn::DiscreteBayesNet) = Vector{Variable}(vcat([variables(s) for s in systems(dbn)]...))
 variables_names(dbn::DiscreteBayesNet) = [v.name for v in variables(dbn)]
 
-variable_to_node(dbn::DiscreteBayesNet, v::Variable) = findfirst((sys -> v in sys.variables), dbn.systems)
 
-_check_parents(dbn, system) = all([p in variables(dbn) for p in parents(system)])
-_check_variables(dbn, system) = !any([v in variables(dbn) for v in variables(system)])
+check_parents(dbn, system) = all([p in variables(dbn) for p in parents(system)])
+check_variables(dbn, system) = !any([v in variables(dbn) for v in variables(system)])
 
 
 function Base.push!(dbn::DiscreteBayesNet{S}, system::S) where S <: DiscreteSystem
-    _check_parents(dbn, system) || error("Parents of the system missing from the structure!")
-    _check_variables(dbn, system) || error("Variables of the system already present in the structure!")
-    println(variables(dbn))
+    check_parents(dbn, system) || error("Parents of the system missing from the structure!")
+    check_variables(dbn, system) || error("Variables of the system already present in the structure!")
 
-    expanded_system = system
-    # TODO
-    #     expanded_system = expand_parents(system, systems(dbn))
+    expanded_system = expand_parents(system, dbn.systems)
     perm_system = enforce_parents_order(expanded_system, variables(dbn))
 
     !add_vertex!(dbn.dag)
