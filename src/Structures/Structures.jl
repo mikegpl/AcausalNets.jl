@@ -10,7 +10,11 @@ module Structures
 
 
     export
-        AcausalNet
+        AcausalNet,
+        systems,
+        variables,
+        variables_names,
+        variable_to_node
 
 end #module
 

@@ -8,4 +8,4 @@ acausal_net:
 using AcausalNets.Systems
 
 const AcausalNet = DiscreteBayesNet{DiscreteQuantumSystem}
-AcausalNet() = DiscreteBayesNet(DiscreteQuantumSystem)
+AcausalNet() = DiscreteBayesNet{DiscreteQuantumSystem}(DiscreteQuantumSystem)
