@@ -1,5 +1,5 @@
 #=
-github_requirements:
+build:
 - Julia version: 
 - Author: marcin
 - Date: 2018-07-30
