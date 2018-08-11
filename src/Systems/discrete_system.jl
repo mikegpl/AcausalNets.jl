@@ -32,7 +32,7 @@ function enforce_parents_order(ds::DiscreteSystem{D}, existing_variables::Vector
     new_parents_order = [v for v in existing_variables if v in parents(ds)]
     old_parents_order = parents(ds)
 
-    new_parents_indexing = [findfirst(old_parents_order, p) for p in new_parents_order]
+    new_parents_indexing = Vector{Int64}([findfirst([p == o for o in old_parents_order]) for p in new_parents_order])
     new_variables_indexing = Vector(1:length(variables(ds)))
     permute_system(ds, new_parents_indexing, new_variables_indexing)
 end
@@ -42,7 +42,7 @@ function expand_parents(ds::DiscreteSystem{D}, existing_systems::Vector{Discrete
     for sys in parent_systems
         for var in sys.variables
             if !(var in parents(ds))
-                ds = prepend_parent!(ds, var)
+                ds = prepend_parent(ds, var)
             end
         end
     end
