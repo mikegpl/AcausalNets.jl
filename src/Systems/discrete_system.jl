@@ -1,4 +1,5 @@
 using AcausalNets.Common
+import Base: ==
 
 struct DiscreteSystem{D}
     parents         ::Vector{Variable}
@@ -16,6 +17,10 @@ struct DiscreteSystem{D}
     end
 end
 
+# Base.:(==)(ds1::DiscreteSystem{D}, ds2::DiscreteSystem{D}) where D =
+#     parents(ds1) == parents(ds2) &&
+#     variables(ds1) == variables(ds2)
+
 DiscreteSystem{D}(variables::Vector{Variable}, distribution::D) where D = DiscreteSystem{D}(Variable[], variables, distribution)
 
 
@@ -27,6 +32,8 @@ Base.string(ds::DiscreteSystem) = join([String(n) for n in variables_names(ds)],
 
 relevant_variables(system::DiscreteSystem) = vcat(system.parents, system.variables)
 
+
+Common.ncategories(ds::DiscreteSystem) = ncategories(variables(ds))
 
 function enforce_parents_order(ds::DiscreteSystem{D}, existing_variables::Vector{Variable}) where D
     new_parents_order = [v for v in existing_variables if v in parents(ds)]

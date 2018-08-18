@@ -8,6 +8,8 @@ module Common
         VariableName,
         VariableNames,
         Variable,
-        eye
+        ncategories,
+        star,
+        unstar
 
 end
