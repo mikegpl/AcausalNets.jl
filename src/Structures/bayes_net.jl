@@ -26,7 +26,8 @@ end
 
 
 # Returns the index of dbn's DAG node which represents the variable
-variable_to_node(dbn::DiscreteBayesNet, v::Variable) = findfirst((sys -> v in sys.variables), dbn.systems)
+variable_to_node(dbn::DiscreteBayesNet, v::Variable) = findfirst((sys -> v in variables(sys)), dbn.systems)
+system_to_node(dbn::DiscreteBayesNet{S}, s::S) where S <: DiscreteSystem = findfirst(systems(dbn), s)
 
 systems(dbn::DiscreteBayesNet) = dbn.systems
 variables(dbn::DiscreteBayesNet) = Vector{Variable}(vcat([variables(s) for s in systems(dbn)]...))
@@ -35,6 +36,7 @@ variables_names(dbn::DiscreteBayesNet) = [v.name for v in variables(dbn)]
 
 check_parents(dbn, system) = all([p in variables(dbn) for p in parents(system)])
 check_variables(dbn, system) = !any([v in variables(dbn) for v in variables(system)])
+
 
 
 function Base.push!(dbn::DiscreteBayesNet{S}, system::S) where S <: DiscreteSystem

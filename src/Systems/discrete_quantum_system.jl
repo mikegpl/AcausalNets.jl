@@ -1,7 +1,7 @@
 using QI
-import AcausalNets.Common: Variable
+import AcausalNets.Common: Variable, eye
 
-const QuantumDistribution = Matrix
+const QuantumDistribution = AbstractMatrix
 const DiscreteQuantumSystem = DiscreteSystem{QuantumDistribution}
 
 function check_distribution(
@@ -14,7 +14,7 @@ function check_distribution(
     dimensions[1] == dimensions[2] == total_ncategories
 end
 
-function prepend_parent!(dqs::DiscreteQuantumSystem, var::Variable)
+function prepend_parent(dqs::DiscreteQuantumSystem, var::Variable)
     if !(var in parents(dqs))
         new_parents = vcat([var], parents(dqs))
         new_distribution = kron(eye(var.ncategories), dqs.distribution)
@@ -26,11 +26,10 @@ end
 
 # not to confuse with QI's permute_systems - this is a higher-level implementation
 function permute_system(dqs::DiscreteQuantumSystem, new_parent_indexing, new_variable_indexing)
-    new_indexing = vcat(new_parent_indexing, new_variable_indexing + length(parents(dqs)))
+    new_indexing = vcat(new_parent_indexing, new_variable_indexing .+ length(parents(dqs)))
     dimensions = [v.ncategories for v in relevant_variables(dqs)]
     new_distribution = permute_systems(dqs.distribution, dimensions, new_indexing)
     new_parents = [parents(dqs)[i] for i in new_parent_indexing]
     new_variables = [variables(dqs)[i] for i in new_variable_indexing]
-
-    DiscreteQuantumSystem(new_parents, new_variables, new_distribution)
+    DiscreteQuantumSystem(Vector{Variable}(new_parents), new_variables, new_distribution)
 end

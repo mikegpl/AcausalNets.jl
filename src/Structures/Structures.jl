@@ -14,7 +14,8 @@ module Structures
         systems,
         variables,
         variables_names,
-        variable_to_node
+        variable_to_node,
+        system_to_node
 
 end #module
 
