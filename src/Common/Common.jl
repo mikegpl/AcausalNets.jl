@@ -9,7 +9,6 @@ module Common
         VariableNames,
         Variable,
         ncategories,
-        star,
-        unstar
+        star, unstar
 
 end
