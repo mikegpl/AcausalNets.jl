@@ -26,22 +26,32 @@ end
 
 
 # Returns the index of dbn's DAG node which represents the variable
-variable_to_node(dbn::DiscreteBayesNet, v::Variable) = findfirst((sys -> v in variables(sys)), dbn.systems)
-system_to_node(dbn::DiscreteBayesNet{S}, s::S) where S <: DiscreteSystem = findfirst([s==sys for sys in systems(dbn)])
+variable_to_node(v::Variable, dbn::DiscreteBayesNet) = findfirst((sys -> v in variables(sys)), dbn.systems)
+system_to_node(s::S, dbn::DiscreteBayesNet{S}) where S <: DiscreteSystem = findfirst([s==sys for sys in systems(dbn)])
 
 systems(dbn::DiscreteBayesNet) = dbn.systems
 variables(dbn::DiscreteBayesNet) = Vector{Variable}(vcat([variables(s) for s in systems(dbn)]...))
 variables_names(dbn::DiscreteBayesNet) = [v.name for v in variables(dbn)]
 
 
-check_parents(dbn, system) = all([p in variables(dbn) for p in parents(system)])
-check_variables(dbn, system) = !any([v in variables(dbn) for v in variables(system)])
+check_parents(system, dbn) = all([p in variables(dbn) for p in parents(system)])
+check_variables(system, dbn) = !any([v in variables(dbn) for v in variables(system)])
 
 
+function parent_systems(ds::S, dbn::DiscreteBayesNet) where S
+    result = S[]
+    for p in parents(ds)
+        parent_system = systems(dbn)[variable_to_node(p, dbn)]
+        if !(parent_system in result)
+            push!(result, parent_system)
+        end
+    end
+    return result
+end
 
 function Base.push!(dbn::DiscreteBayesNet{S}, system::S) where S <: DiscreteSystem
-    check_parents(dbn, system) || error("Parents of the system missing from the structure!")
-    check_variables(dbn, system) || error("Variables of the system already present in the structure!")
+    check_parents(system, dbn) || error("Parents of the system missing from the structure!")
+    check_variables(system, dbn) || error("Variables of the system already present in the structure!")
 
     expanded_system = expand_parents(system, dbn.systems)
     perm_system = enforce_parents_order(expanded_system, variables(dbn))
@@ -49,7 +59,7 @@ function Base.push!(dbn::DiscreteBayesNet{S}, system::S) where S <: DiscreteSyst
     !add_vertex!(dbn.dag)
     push!(dbn.systems, perm_system)
     for p in perm_system.parents
-        add_edge!(dbn.dag, variable_to_node(dbn, p), length(dbn.systems))
+        add_edge!(dbn.dag, variable_to_node(p, dbn), length(dbn.systems))
     end
 
     return dbn

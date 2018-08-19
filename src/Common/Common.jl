@@ -2,13 +2,12 @@ module Common
 
     include("names.jl")
     include("variables.jl")
-    include("math.jl")
+    include("sets.jl")
 
     export
         VariableName,
         VariableNames,
         Variable,
-        ncategories,
-        star, unstar
+        ncategories
 
 end

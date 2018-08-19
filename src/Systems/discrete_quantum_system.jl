@@ -1,5 +1,6 @@
 using QI
-import AcausalNets.Common: Variable, eye
+import AcausalNets.Common: Variable
+import AcausalNets.Algebra: eye
 
 const QuantumDistribution = AbstractMatrix
 const DiscreteQuantumSystem = DiscreteSystem{QuantumDistribution}
