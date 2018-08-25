@@ -9,6 +9,7 @@ module Systems
         parents_names,
         variables_names,
         relevant_variables,
+        is_parent,
         DiscreteQuantumSystem
 
 end #module

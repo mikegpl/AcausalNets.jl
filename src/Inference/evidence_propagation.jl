@@ -21,7 +21,7 @@ import AcausalNets.Inference:
     JoinTree,
     shallowcopy
 
-function single_message_pass(from_ind::Int, to_ind::Int, jt::JoinTree, dbn::DiscreteBayesNet)::JoinTree
+function single_message_pass(from_ind::Int, to_ind::Int, jt::JoinTree{S}, dbn::DiscreteBayesNet{S})::JoinTree{S} where S
     jt = shallowcopy(jt)
     if (from_ind, to_ind) in edges(jt.graph)
         cluster_from = jt.clusters[from_ind]
@@ -55,7 +55,7 @@ function single_message_pass(from_ind::Int, to_ind::Int, jt::JoinTree, dbn::Disc
     return jt
 end
 
-function collect_evidence(cluster_ind::Int, cluster_marks::Vector{Bool}, jt::JoinTree, dbn::DiscreteBayesNet)::Tuple{JoinTree, Vector{Bool}}
+function collect_evidence(cluster_ind::Int, cluster_marks::Vector{Bool}, jt::JoinTree{S}, dbn::DiscreteBayesNet{S})::Tuple{JoinTree{S}, Vector{Bool}} where S
     jt = shallowcopy(jt)
 
     cluster_marks[cluster_ind] = false
@@ -70,7 +70,7 @@ function collect_evidence(cluster_ind::Int, cluster_marks::Vector{Bool}, jt::Joi
 
 end
 
-function distribute_evidence(cluster_ind::Int, cluster_marks::Vector{Bool}, jt::JoinTree, dbn::DiscreteBayesNet)::Tuple{JoinTree, Vector{Bool}}
+function distribute_evidence(cluster_ind::Int, cluster_marks::Vector{Bool}, jt::JoinTree{S}, dbn::DiscreteBayesNet{S})::Tuple{JoinTree{S}, Vector{Bool}} where S
     cluster_marks[cluster_ind] = false
     jt = shallowcopy(jt)
 
@@ -87,7 +87,7 @@ function distribute_evidence(cluster_ind::Int, cluster_marks::Vector{Bool}, jt::
     jt, cluster_marks
 end
 
-function global_propagation(jt::JoinTree, dbn::DiscreteBayesNet)::JoinTree
+function global_propagation(jt::JoinTree{S}, dbn::DiscreteBayesNet{S})::JoinTree{S} where S
     jt = shallowcopy(jt)
     cluster_marks = [true for c in jt.clusters]
     arbitrary_cluster_ind = 1
@@ -95,4 +95,14 @@ function global_propagation(jt::JoinTree, dbn::DiscreteBayesNet)::JoinTree
     cluster_marks = [true for c in jt.clusters]
     jt, cluster_marks = distribute_evidence(arbitrary_cluster_ind, cluster_marks, jt, dbn)
     return jt
+end
+
+function normalization(jt::JoinTree{S})::JoinTree{S} where S
+    jt = shallowcopy(jt)
+    for key in keys(jt.vertex_to_num)
+        jt.vertex_to_num[key] = normalize(jt.vertex_to_num[key])
+    end
+    for key in keys(jt.edge_to_num)
+        jt.edge_to_num[key] = normalize(jt.edge_to_num[key])
+    end
 end

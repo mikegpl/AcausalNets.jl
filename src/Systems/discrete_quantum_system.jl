@@ -34,3 +34,5 @@ function permute_system(dqs::DiscreteQuantumSystem, new_parent_indexing, new_var
     new_variables = [variables(dqs)[i] for i in new_variable_indexing]
     DiscreteQuantumSystem(Vector{Variable}(new_parents), new_variables, new_distribution)
 end
+
+identity_distribution(::Type{D}, size::Int64) where {D <: QuantumDistribution} = eye(size)

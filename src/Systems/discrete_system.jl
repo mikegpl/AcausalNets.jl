@@ -1,5 +1,7 @@
+import AcausalNets.Common:
+    is_subset
+
 using AcausalNets.Common
-import Base: ==
 
 struct DiscreteSystem{D}
     parents         ::Vector{Variable}
@@ -55,3 +57,14 @@ function expand_parents(ds::DiscreteSystem{D}, existing_systems::Vector{Discrete
     end
     ds
 end
+
+function is_parent(potential_parent::DiscreteSystem{D}, potential_child::DiscreteSystem{D}) where D
+    par_variables = Set(variables(potential_parent))
+    child_parents = Set(parents(potential_child))
+
+    is_subset(par_variables, child_parents) ||
+        length(intersect(par_variables, child_parents)) == 0 ||
+        error("Only some of the variables in parent are listed as child's parents.
+                Inputting the systems into an AcausalNet may fix that problem.")
+end
+

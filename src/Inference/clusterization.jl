@@ -38,31 +38,30 @@ function moral_graph(dbn::DiscreteBayesNet)::MoralGraph
 end
 
 const TriangulatedGraph = Graph
-const SystemCluster = Vector{DiscreteSystem}
 
-function triangulate(mg::MoralGraph, dbn::DiscreteBayesNet)::Tuple{TriangulatedGraph, Vector{SystemCluster}}
+function triangulate(mg::MoralGraph, dbn::DiscreteBayesNet{S})::Tuple{TriangulatedGraph, Vector{Vector{S}}} where S
     mg_copy = [false for _ in vertices(mg)]
     mg = deepcopy(mg)
     nl = systems(dbn)
-    clusters = Set[]
+    cliques = Set[]
     while(!all(mg_copy))
         least_edges_to_be_added = Inf
         chosen_vertex = 0
-        chosen_cluster = Set()
+        chosen_clique = Set()
         for v=1:length(mg_copy)
             if mg_copy[v]
                 continue
             else
-                cluster = Set()
+                clique = Set()
                 for e in edges(mg)
                     if (v==src(e) || v==dst(e)) && !mg_copy[src(e)] && !mg_copy[dst(e)]
-                        push!(cluster, src(e))
-                        push!(cluster, dst(e))
+                        push!(clique, src(e))
+                        push!(clique, dst(e))
                     end
                 end
                 edges_todo = 0
-                for v1 in cluster
-                    for v2 in cluster
+                for v1 in clique
+                    for v2 in clique
                         if v1 != v2 && !in((v1, v2), edges(mg))
                             edges_todo +=1
                         end
@@ -72,26 +71,26 @@ function triangulate(mg::MoralGraph, dbn::DiscreteBayesNet)::Tuple{TriangulatedG
 
                 if edges_todo < least_edges_to_be_added ||
                     ((edges_todo == least_edges_to_be_added) &&
-                        (prod([ncategories(systems(dbn)[n]) for n in cluster]) <= prod([ncategories(systems(dbn)[n]) for n in chosen_cluster])))
+                        (prod([ncategories(systems(dbn)[n]) for n in clique]) <= prod([ncategories(systems(dbn)[n]) for n in chosen_clique])))
                     least_edges_to_be_added = edges_todo
                     chosen_vertex = v
-                    chosen_cluster = cluster
+                    chosen_clique = clique
                 end
             end
         end
-        chosen_nodes = Set([nl[n] for n in chosen_cluster])
-        if !any([is_subset(chosen_nodes, cluster) for cluster in clusters])
-            push!(clusters, chosen_nodes)
+        chosen_nodes = Set([nl[n] for n in chosen_clique])
+        if !any([is_subset(chosen_nodes, clique) for clique in cliques])
+            push!(cliques, chosen_nodes)
         end
         mg_copy[chosen_vertex] = true
-        for v1 in chosen_cluster
-            for v2 in chosen_cluster
+        for v1 in chosen_clique
+            for v2 in chosen_clique
                 if v1 != v2 && !in((v1, v2), edges(mg))
                     add_edge!(mg, v1, v2)
                 end
             end
         end
     end
-    clusters = [sort([c for c in cluster], by=c -> system_to_node(c, dbn)) for cluster in clusters]
-    return mg, clusters
+    cliques = [sort([c for c in clique], by=c -> system_to_node(c, dbn)) for clique in cliques]
+    return mg, cliques
 end
