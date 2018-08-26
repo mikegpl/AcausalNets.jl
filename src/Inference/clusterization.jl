@@ -39,6 +39,8 @@ end
 
 const TriangulatedGraph = Graph
 
+const TriangulatedGraph = Graph
+
 function triangulate(mg::MoralGraph, dbn::DiscreteBayesNet{S})::Tuple{TriangulatedGraph, Vector{Vector{S}}} where S
     mg_copy = [false for _ in vertices(mg)]
     mg = deepcopy(mg)

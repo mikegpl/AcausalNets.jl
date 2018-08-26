@@ -6,6 +6,7 @@ module Systems
     export
         parents,
         variables,
+        distribution,
         parents_names,
         variables_names,
         relevant_variables,

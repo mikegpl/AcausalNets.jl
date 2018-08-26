@@ -37,6 +37,8 @@ variables_names(dbn::DiscreteBayesNet) = [v.name for v in variables(dbn)]
 check_parents(system, dbn) = all([p in variables(dbn) for p in parents(system)])
 check_variables(system, dbn) = !any([v in variables(dbn) for v in variables(system)])
 
+family(ds::S, dbn::DiscreteBayesNet{S}) where {S} = union(Set([ds]), Set(parent_systems(ds, dbn)))
+
 
 function parent_systems(ds::S, dbn::DiscreteBayesNet) where S
     result = S[]
