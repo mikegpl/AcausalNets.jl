@@ -33,8 +33,9 @@ function sepset_comparator(c1::Vector{S}, c2::Vector{S})::Int64 where S
     -length(intersect(c1, c2))
 end
 
+const ParentCliquesDict{S} = Dict{S, Vector{S}}
 
-function parent_cliques_dict(cliques::Vector{Vector{S}}, dbn::DiscreteBayesNet{S})::Dict{S, Vector{S}} where S
+function parent_cliques_dict(cliques::Vector{Vector{S}}, dbn::DiscreteBayesNet{S})::ParentCliquesDict{S} where S
     Dict([
         sys => first([
             c for c in cliques if is_subset(family(sys, dbn), Set(c))
@@ -43,8 +44,9 @@ function parent_cliques_dict(cliques::Vector{Vector{S}}, dbn::DiscreteBayesNet{S
     ])
 end
 
-function sys_or_id(system::S, clique::Vector{S}, parent_cliques::Dict{S, Vector{S}})::S where S
+function sys_or_id(system::S, clique::Vector{S}, parent_cliques::ParentCliquesDict{S})::S where S
     if parent_cliques[system] == clique
+
         return system
     else
         return identity_system(system)

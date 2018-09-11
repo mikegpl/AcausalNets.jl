@@ -9,4 +9,5 @@ module Inference
     include("clusterization.jl")
     include("join_tree.jl")
     include("evidence_propagation.jl")
+    include("evidence.jl")
 end # module

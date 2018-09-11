@@ -1,4 +1,5 @@
 using QI
+using LinearAlgebra
 import AcausalNets.Common: Variable
 import AcausalNets.Algebra: eye, star, unstar
 
@@ -8,6 +9,7 @@ const DiscreteQuantumSystem = DiscreteSystem{QuantumDistribution}
 multiply_star(d1::QuantumDistribution, d2::QuantumDistribution) = star(d1, d2)
 divide_star(d1::QuantumDistribution, d2::QuantumDistribution) = unstar(d1, d2)
 multiply_kron(d1::QuantumDistribution, d2::QuantumDistribution) = kron(d1, d2)
+sum_distribution(d::QuantumDistribution) = tr(d)
 
 function check_distribution(
     distribution::QuantumDistribution,
