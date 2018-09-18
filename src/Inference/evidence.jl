@@ -15,7 +15,6 @@ import AcausalNets.Common:
 
 import AcausalNets.Systems:
     DiscreteSystem,
-    sum_distributions,
     relevant_variables,
     distribution,
     multiply_kron,
@@ -83,9 +82,6 @@ function apply_observations(
             sys for (sys, par_cliq) in parent_cliques_dict
             if Set(variables(cluster)) == Set(vcat([variables(s) for s in par_cliq]...))
             ]
-        println("Cluster")
-        println([v.name for v in variables(cluster)])
-        println([[v.name for v in variables(sys)] for sys in child_systems])
         relevant_observations = E[
             o for o in observations if
             any([
@@ -94,9 +90,6 @@ function apply_observations(
                 ])
             ]
         observations_dict[v] = merge_systems(relevant_observations)
-        println("observations")
-        println([[v.name for v in variables(o)] for o in relevant_observations])
-        println()
     end
 
     new_vertex_to_cluster = Dict([

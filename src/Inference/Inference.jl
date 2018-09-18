@@ -10,4 +10,10 @@ module Inference
     include("join_tree.jl")
     include("evidence_propagation.jl")
     include("evidence.jl")
+    include("inferrer.jl")
+
+    export
+        Evidence,
+        Inferrer,
+        infer
 end # module

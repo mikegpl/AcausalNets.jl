@@ -46,7 +46,6 @@ end
 
 function sys_or_id(system::S, clique::Vector{S}, parent_cliques::ParentCliquesDict{S})::S where S
     if parent_cliques[system] == clique
-
         return system
     else
         return identity_system(system)
@@ -127,3 +126,25 @@ shallowcopy(jt::JoinTree) = JoinTree(
             k => shallowcopy(jt.edge_to_sepset[k]) for k in keys(jt.edge_to_sepset)
             ])
     )
+
+function normalize(jt::JoinTree{S}) where S
+    JoinTree(
+        jt.graph,
+        Dict([
+                v => S(
+                    c.parents,
+                    c.variables,
+                    c.distribution / sum_distribution(c.distribution)
+                    )
+                for (v, c) in jt.vertex_to_cluster
+            ]),
+        Dict([
+                e => S(
+                    s.parents,
+                    s.variables,
+                    s.distribution / sum_distribution(s.distribution)
+                    )
+                for (e, s) in jt.edge_to_sepset
+            ])
+    )
+end
