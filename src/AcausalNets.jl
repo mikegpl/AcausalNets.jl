@@ -10,15 +10,14 @@ module AcausalNets
     include_module("Systems")
     include_module("Structures")
     include_module("Inference")
-
-#     include(joinpath("Representation", "Representation.jl"))
-
+    include_module("Representation")
+#
     using Reexport
     @reexport using AcausalNets.Algebra
     @reexport using AcausalNets.Common
     @reexport using AcausalNets.Systems
     @reexport using AcausalNets.Structures
     @reexport using AcausalNets.Inference
-#     @reexport using AcausalNets.Representation
+    @reexport using AcausalNets.Representation
 
 end # module
