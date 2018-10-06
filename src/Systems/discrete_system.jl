@@ -144,3 +144,8 @@ function permute_system(ds::DiscreteSystem{D}, new_parent_indexing::Vector{Int64
     new_variables = Variable[variables(ds)[i] for i in new_variable_indexing]
     DiscreteSystem{D}(new_parents, new_variables, new_distribution)
 end
+
+function permute_system(ds::DiscreteSystem{D}, new_variable_indexing::Vector{Int64}) where D
+    length(parents(ds)) == 0 || error("Parents permutation must be specified for this system!")
+    permute_system(ds, Int64[], new_variable_indexing)
+end

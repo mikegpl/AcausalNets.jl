@@ -10,14 +10,16 @@ import AcausalNets.Structures:
     DiscreteBayesNet,
     parent_systems,
     systems,
-    system_to_node
+    system_to_node,
+    variable_to_node
 
 import AcausalNets.Systems:
     DiscreteSystem,
     ncategories
 
 import AcausalNets.Common:
-    is_subset
+    is_subset,
+    Variable
 
 const MoralGraph = Graph
 
@@ -37,7 +39,18 @@ function moral_graph(dbn::DiscreteBayesNet)::MoralGraph
     return result
 end
 
-const TriangulatedGraph = Graph
+function enforce_clique(dbn::DiscreteBayesNet, mg::MoralGraph, vars_to_infer::Vector{Variable}=Variable[])::MoralGraph
+    mg_enforced = deepcopy(mg)
+    inferred_nodes = [variable_to_node(v, dbn) for v in vars_to_infer]
+    for n1 in inferred_nodes
+        for n2 in inferred_nodes
+            if n1 != n2
+                add_edge!(mg_enforced, n1, n2)
+            end
+        end
+    end
+    return mg_enforced
+end
 
 const TriangulatedGraph = Graph
 

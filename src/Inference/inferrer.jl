@@ -6,11 +6,14 @@ huang_inference:
 =#
 
 import AcausalNets.Common:
-    Variable
+    Variable,
+    ncategories
 
 import AcausalNets.Systems:
     DiscreteSystem,
-    variables
+    variables,
+    distribution,
+    permute_system
 
 import AcausalNets.Structures:
     DiscreteBayesNet
@@ -21,6 +24,7 @@ import AcausalNets.Inference:
     ParentCliquesDict,
     parent_cliques_dict,
     moral_graph,
+    enforce_clique,
     triangulate,
     apply_observations,
     global_propagation
@@ -28,16 +32,12 @@ import AcausalNets.Inference:
 
 struct Inferrer{S <: DiscreteSystem}
     bayes_net                   ::DiscreteBayesNet{S}
-    initialized_join_tree       ::JoinTree{S}
-    parent_cliques              ::ParentCliquesDict{S}
+#     initialized_join_tree       ::JoinTree{S}
+#     parent_cliques              ::ParentCliquesDict{S}
 
     function Inferrer{S}(dbn::DiscreteBayesNet{S}) where S
         dbn = deepcopy(dbn)
-        mg = moral_graph(dbn)
-        tri_mg, cliques = triangulate(mg, dbn)
-        parent_cliques = parent_cliques_dict(cliques, dbn)
-        join_tree = JoinTree(cliques, dbn)
-        new{S}(dbn, join_tree, parent_cliques)
+        new{S}(dbn)
     end
 end
 
@@ -56,17 +56,22 @@ function infer(
         }
 
     length(vars_to_infer) > 0 || error("At least one variable to infer must be specified!")
-    parent_cliques = inferrer.parent_cliques
+    dbn = inferrer.bayes_net
+    mg = moral_graph(dbn)
+    enforced_mg = enforce_clique(dbn, mg, vars_to_infer)
+    tri_mg, cliques = triangulate(enforced_mg, dbn)
+    parent_cliques = parent_cliques_dict(cliques, dbn)
+    initialized_jt = JoinTree(cliques, dbn)
     jt = normalize(
             global_propagation(
                 apply_observations(
-                    inferrer.initialized_join_tree,
+                    initialized_jt,
                     parent_cliques,
                     observations
                 )
             )
         )
-    first([
+    inferred_cluster = first([
             sys
             for (i, sys) in jt.vertex_to_cluster
             if all([
@@ -74,4 +79,22 @@ function infer(
                     for v in vars_to_infer
                     ])
         ])
+
+    # TODO subsystem function
+    inferred_vars = variables(inferred_cluster)
+    to_trace_out_vars = setdiff(inferred_vars, vars_to_infer)
+    inferred_dims = [ncategories(v) for v in inferred_vars]
+    to_trace_out_ind = Int64[
+            findfirst([v==var for var in inferred_vars]) for v in to_trace_out_vars
+            ]
+
+    inferred_distribution = reduce_distribution(
+            distribution(inferred_cluster), inferred_dims, to_trace_out_ind
+        )
+    inferred_system = S(
+        [v for v in inferred_vars if v in vars_to_infer],
+        inferred_distribution
+    )
+    new_variable_indexing = Int64[findfirst([v == iv for iv in variables(inferred_system)]) for v in vars_to_infer]
+    permute_system(inferred_system, new_variable_indexing)
 end
