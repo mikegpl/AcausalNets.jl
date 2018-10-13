@@ -32,8 +32,6 @@ import AcausalNets.Inference:
 
 struct Inferrer{S <: DiscreteSystem}
     bayes_net                   ::DiscreteBayesNet{S}
-#     initialized_join_tree       ::JoinTree{S}
-#     parent_cliques              ::ParentCliquesDict{S}
 
     function Inferrer{S}(dbn::DiscreteBayesNet{S}) where S
         dbn = deepcopy(dbn)
@@ -42,9 +40,23 @@ struct Inferrer{S <: DiscreteSystem}
 end
 
 Inferrer(dbn::DiscreteBayesNet{S}) where S = Inferrer{S}(dbn)
+variables(inferrer::Inferrer) = variables(inferrer.bayes_net)
 
- # TODO return a system of only the specified variables
 function infer(
+        inferrer::Inferrer{S},
+        vars_to_infer::Vector{Variable},
+        observations::Vector{E} = E[],
+        ) where {
+            D1,
+            D2 <: D1,
+            S <: DiscreteSystem{D1},
+            E <: Evidence{D2}
+        }
+    result, _ = infer_debug(inferrer, vars_to_infer, observations)
+    return result
+end
+
+function infer_debug(
         inferrer::Inferrer{S},
         vars_to_infer::Vector{Variable},
         observations::Vector{E} = E[]
@@ -62,15 +74,14 @@ function infer(
     tri_mg, cliques = triangulate(enforced_mg, dbn)
     parent_cliques = parent_cliques_dict(cliques, dbn)
     initialized_jt = JoinTree(cliques, dbn)
-    jt = normalize(
-            global_propagation(
-                apply_observations(
-                    initialized_jt,
-                    parent_cliques,
-                    observations
-                )
-            )
-        )
+
+    observations_jt = apply_observations(
+                        initialized_jt,
+                        parent_cliques,
+                        observations
+                    )
+    propagated_jt = global_propagation(observations_jt)
+    jt = normalize(propagated_jt)
     inferred_cluster = first([
             sys
             for (i, sys) in jt.vertex_to_cluster
@@ -96,5 +107,19 @@ function infer(
         inferred_distribution
     )
     new_variable_indexing = Int64[findfirst([v == iv for iv in variables(inferred_system)]) for v in vars_to_infer]
-    permute_system(inferred_system, new_variable_indexing)
+    intermediate_elements = (
+        dbn,
+        mg,
+        enforced_mg,
+        tri_mg,
+        cliques,
+        parent_cliques,
+        initialized_jt,
+        observations_jt,
+        propagated_jt,
+        jt,
+    )
+
+    inference_result = permute_system(inferred_system, new_variable_indexing)
+    inference_result, intermediate_elements
 end

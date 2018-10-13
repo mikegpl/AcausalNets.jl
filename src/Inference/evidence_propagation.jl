@@ -9,7 +9,13 @@ using LightGraphs
 using QI
 
 import AcausalNets.Systems:
-    ncategories
+    ncategories,
+    reduce_distribution,
+    multiply_star
+    divide_star,
+    identity_distribution,
+    multiply_kron,
+    permute_distribution
 
 import AcausalNets.Algebra:
     star, unstar
@@ -54,8 +60,8 @@ function single_message_pass(from_ind::Int, to_ind::Int, jt::JoinTree{S}) where 
         message_all_vars = vcat(message_vars, non_message_vars)
 
         message_sorted_indices = Int64[
-            findfirst([v==var for var in variables(cluster_to)])
-            for v in message_all_vars
+            findfirst([v==var for var in message_all_vars])
+            for v in variables(cluster_to)
             ]
 
         message_dims = [ncategories(v) for v in message_all_vars]

@@ -18,7 +18,7 @@ function Base.show(dbn::DiscreteBayesNet)
 end
 
 function Base.show(jt::JoinTree)
-    node_names = [string(jt.vertex_to_cluster[i]) for i in 1:length(jt.vertex_to_cluster)]
+    node_names = ["$i:" * string(jt.vertex_to_cluster[i]) for i in 1:length(jt.vertex_to_cluster)]
     return gplot(jt.graph, nodelabel = node_names)
 end
 
