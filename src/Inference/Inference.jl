@@ -11,6 +11,8 @@ module Inference
     include("evidence_propagation.jl")
     include("evidence.jl")
     include("inferrer.jl")
+    include("naive_inferrer.jl")
+
 
     export
         Evidence,

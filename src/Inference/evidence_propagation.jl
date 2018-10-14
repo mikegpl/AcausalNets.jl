@@ -11,7 +11,7 @@ using QI
 import AcausalNets.Systems:
     ncategories,
     reduce_distribution,
-    multiply_star
+    multiply_star,
     divide_star,
     identity_distribution,
     multiply_kron,

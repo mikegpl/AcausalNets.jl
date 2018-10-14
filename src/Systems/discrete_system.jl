@@ -115,7 +115,12 @@ function merge_systems(systems::Vector{S})::S where {D, S <: DiscreteSystem{D}}
 
         right_order = invperm(factor_indices)
         ordered_distribution = permute_distribution(factor_distribution, factor_dimensions, right_order)
-        result_distribution = multiply_star(ordered_distribution, result_distribution)
+
+        # our order of multiplication
+        result_distribution = multiply_star(result_distribution, ordered_distribution)
+
+        # original (dr. Kurzyk) order of multiplication
+#         result_distribution = multiply_star(ordered_distribution, result_distribution)
     end
     DiscreteSystem{D}(all_parents, all_variables, result_distribution)
 end

@@ -7,6 +7,6 @@ Representation:
 
 module Representation
 
-    include("net_visualization.jl")
+    include("visualization.jl")
 
 end # module

@@ -9,7 +9,7 @@ using GraphPlot
 
 import AcausalNets.Structures: DiscreteBayesNet
 
-import AcausalNets.Inference: JoinTree
+import AcausalNets.Inference: JoinTree, Inferrer
 
 
 function Base.show(dbn::DiscreteBayesNet)
@@ -22,3 +22,4 @@ function Base.show(jt::JoinTree)
     return gplot(jt.graph, nodelabel = node_names)
 end
 
+Base.show(inferrer::Inferrer) = show(inferrer.bayes_net)
