@@ -1,6 +1,6 @@
 #=
 visualization:
-- Julia version: 
+- Julia version: 0.7
 - Author: marcin
 - Date: 2018-07-28
 =#
