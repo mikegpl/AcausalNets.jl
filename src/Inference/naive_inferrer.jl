@@ -23,7 +23,7 @@ function infer_naive(
             S <: DiscreteSystem{D1},
             E <: Evidence{D2}
         }
-    _, result = infer_naive_debug(inferrer, vars_to_infer, observations)
+    result, _ = infer_naive_debug(inferrer, vars_to_infer, observations)
     return result
 end
 
@@ -46,6 +46,7 @@ function infer_naive_debug(
     dbn = inferrer.bayes_net
     cluster = merge_systems(systems(dbn))
     observations = merge_systems(observations)
+
     evidence_cluster = apply_evidence(cluster, observations)
     inferred_cluster = S(
         variables(evidence_cluster),
@@ -77,5 +78,5 @@ function infer_naive_debug(
     )
 
     inference_result = permute_system(inferred_system, new_variable_indexing)
-    intermediate_elements, inference_result
+    inference_result, intermediate_elements
 end

@@ -15,10 +15,11 @@ import AcausalNets.Systems:
     divide_star,
     identity_distribution,
     multiply_kron,
-    permute_distribution
+    permute_distribution,
+    sub_system
 
 import AcausalNets.Algebra:
-    star, unstar
+    star, unstar, event
 
 import AcausalNets.Structures:
     DiscreteBayesNet
@@ -29,48 +30,33 @@ import AcausalNets.Inference:
 
 function single_message_pass(from_ind::Int, to_ind::Int, jt::JoinTree{S}) where S
     if (from_ind, to_ind) in edges(jt.graph)
+        println("message2 from $from_ind to $to_ind")
         jt = shallowcopy(jt)
         cluster_from = jt.vertex_to_cluster[from_ind]
         cluster_to = jt.vertex_to_cluster[to_ind]
         edge_set = Set([from_ind, to_ind])
         sepset = jt.edge_to_sepset[edge_set]
-        to_trace_out_vars = setdiff(variables(cluster_from), variables(sepset))
-        to_trace_out_ind = Int64[
-            findfirst([v==var for var in variables(cluster_from)]) for v in to_trace_out_vars
-            ]
-        from_variables_sizes = [ncategories(v) for v in variables(cluster_from)]
-        from_distribution = distribution(cluster_from)
-        old_sepset_distribution = distribution(sepset)
-        new_sepset_distribution = reduce_distribution(
-            distribution(cluster_from), from_variables_sizes, to_trace_out_ind
-        )
-        sepset = S(variables(sepset), new_sepset_distribution)
-        jt.edge_to_sepset[edge_set] = sepset
+
+        old_sepset = sub_system(sepset, variables(cluster_to))
+        new_sepset = sub_system(cluster_from, variables(cluster_to))
+        jt.edge_to_sepset[edge_set] = sub_system(new_sepset, variables(sepset))
 
         to_distribution = distribution(cluster_to)
 
-        message = divide_star(new_sepset_distribution, old_sepset_distribution)
-
-        message_vars = variables(sepset)
-        non_message_vars = setdiff(variables(cluster_to), message_vars)
-        non_message_size = prod([ncategories(v) for v in non_message_vars])
-        message = multiply_kron(
-            message, identity_distribution(typeof(message), non_message_size)
+        new_to_distribution = multiply_star(
+            divide_star(to_distribution, distribution(old_sepset)),
+            distribution(new_sepset),
         )
-        message_all_vars = vcat(message_vars, non_message_vars)
 
-        message_sorted_indices = Int64[
-            findfirst([v==var for var in message_all_vars])
-            for v in variables(cluster_to)
-            ]
 
-        message_dims = [ncategories(v) for v in message_all_vars]
-        message_ordered = permute_distribution(message, message_dims, message_sorted_indices)
-        cluster_to = S(variables(cluster_to), multiply_star(to_distribution, message_ordered))
-        jt.vertex_to_cluster[to_ind] = cluster_to
+        new_cluster_to = S(variables(cluster_to), new_to_distribution)
+#         cluster_to = S(variables(cluster_to), event(to_distribution, message_ordered))
+#         cluster_to = S(variables(cluster_to), multiply_star(to_distribution, message_ordered))
+        jt.vertex_to_cluster[to_ind] = new_cluster_to
     end
     return jt
 end
+
 
 function collect_evidence(cluster_ind::Int, cluster_marks::Vector{Bool}, jt::JoinTree)
     jt = shallowcopy(jt)
@@ -103,12 +89,11 @@ function distribute_evidence(cluster_ind::Int, cluster_marks::Vector{Bool}, jt::
     jt, cluster_marks
 end
 
-function global_propagation(jt::JoinTree)
+function global_propagation(jt::JoinTree, start_ind=1)
     jt = shallowcopy(jt)
     cluster_marks = [true for k in keys(jt.vertex_to_cluster)]
-    arbitrary_cluster_ind = 1
-    jt, cluster_marks = collect_evidence(arbitrary_cluster_ind, cluster_marks, jt)
+    jt, cluster_marks = collect_evidence(start_ind, cluster_marks, jt)
     cluster_marks = [true for k in keys(jt.vertex_to_cluster)]
-    jt, cluster_marks = distribute_evidence(arbitrary_cluster_ind, cluster_marks, jt)
+    jt, cluster_marks = distribute_evidence(start_ind, cluster_marks, jt)
     return jt
 end
