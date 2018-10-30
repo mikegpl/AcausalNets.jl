@@ -1,6 +1,6 @@
 #=
 common:
-- Julia version: 
+- Julia version: 0.7
 - Author: marcin
 - Date: 2018-08-18
 =#
