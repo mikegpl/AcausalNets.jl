@@ -4,7 +4,7 @@ huang_inference:
 - Author: marcin
 - Date: 2018-09-11
 =#
-
+using LightGraphs
 import AcausalNets.Common:
     Variable,
     ncategories
@@ -27,7 +27,8 @@ import AcausalNets.Inference:
     enforce_clique,
     triangulate,
     apply_observations,
-    global_propagation
+    global_propagation,
+    belief
 
 
 struct Inferrer{S <: DiscreteSystem}
@@ -122,4 +123,58 @@ function infer_debug(
 
     inference_result = permute_system(inferred_system, new_variable_indexing)
     inference_result, intermediate_elements
+end
+
+function infer_belief_debug(
+        inferrer::Inferrer{S},
+        vars_to_infer::Vector{Variable},
+        observations::Vector{E} = E[]
+        ) where {
+            D1,
+            D2 <: D1,
+            S <: DiscreteSystem{D1},
+            E <: Evidence{D2}
+        }
+
+    length(vars_to_infer) > 0 || error("At least one variable to infer must be specified!")
+    dbn = inferrer.bayes_net
+    mg = moral_graph(dbn)
+    enforced_mg = enforce_clique(dbn, mg, vars_to_infer)
+    tri_mg, cliques = triangulate(enforced_mg, dbn)
+    parent_cliques = parent_cliques_dict(cliques, dbn)
+    initialized_jt = JoinTree(cliques, dbn)
+
+    observations_jt = apply_observations(
+                        initialized_jt,
+                        parent_cliques,
+                        observations
+                    )
+
+    inferred_cluster_ind = first([
+            i
+            for (i, sys) in initialized_jt.vertex_to_cluster
+            if all([
+                v in variables(sys)
+                for v in vars_to_infer
+            ])
+        ])
+    messages_no = 2 * diameter(observations_jt.graph)
+    inferred_cluster = belief(observations_jt, inferred_cluster_ind, messages_no)
+    inference_result = sub_system(inferred_cluster, vars_to_infer)
+
+    intermediate_elements = (
+        dbn,
+        mg,
+        enforced_mg,
+        tri_mg,
+        cliques,
+        parent_cliques,
+        initialized_jt,
+        observations_jt,
+        messages_no,
+
+        inferred_cluster_ind,
+        inferred_cluster
+    )
+    return inference_result, intermediate_elements
 end

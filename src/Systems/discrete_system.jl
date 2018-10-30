@@ -32,7 +32,15 @@ distribution(ds::DiscreteSystem) = ds.distribution
 
 parents_names(ds::DiscreteSystem) = [p.name for p in parents(ds)]
 variables_names(ds::DiscreteSystem) = [v.name for v in variables(ds)]
-Base.string(ds::DiscreteSystem) = join([String(n) for n in variables_names(ds)], ",")
+
+function Base.string(ds::DiscreteSystem, verbose::Bool=true)
+    result = join([String(v.name) for v in variables(ds)], ",")
+    if verbose
+        par_str = join([String(v.name) for v in parents(ds)], ",")
+        result = join([result, par_str], "|")
+    end
+    result
+end
 
 relevant_variables(system::DiscreteSystem) = vcat(system.parents, system.variables)
 
@@ -84,7 +92,9 @@ function merge_systems(systems::Vector{S}, verbose::Bool = false)::S where {D, S
     for s in systems
         for v in variables(s)
             !(v in all_variables) || error("$v duplicated!")
+#             if !(v in all_variables)
             push!(all_variables, v)
+#             end
         end
     end
     for s in systems
@@ -177,18 +187,21 @@ function permute_system(ds::DiscreteSystem{D}, new_variable_indexing::Vector{Int
 end
 
 function sub_system(ds::DiscreteSystem{D}, desired_variables::Vector{Variable}) where D
+#     println("sub_system")
+#     println(string(ds))
+#     println([v.name for v in desired_variables])
     sys_vars = Variable[v for v in desired_variables if v in relevant_variables(ds)]
     non_sys_vars = Variable[v for v in desired_variables if !(v in sys_vars)]
     unordered_vars = vcat(sys_vars, non_sys_vars)
 
     redundant_indices = Vector{Int}(findall(
         (v) -> !(v in unordered_vars),
-        variables(ds)
+        relevant_variables(ds)
     ))
 
     sys_dist = reduce_distribution(
                     distribution(ds),
-                    [ncategories(v) for v in variables(ds)],
+                    [ncategories(v) for v in relevant_variables(ds)],
                     redundant_indices
             )
     non_sys_dist = identity_distribution(D, prod([ncategories(v) for v in non_sys_vars]))

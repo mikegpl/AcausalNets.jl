@@ -20,6 +20,7 @@ import AcausalNets.Systems:
     shallowcopy,
     merge_systems,
     identity_system,
+    sub_system,
     identity_distribution, permute_distribution, reduce_distribution,
     multiply_star, divide_star, multiply_kron # those methods should be system-agnostic
 
@@ -63,9 +64,16 @@ function Cluster(systems::Vector{S})::S where S
     end
     for s in systems
         all([p in all_variables for p in parents(s)]) ||
-            error("parents of system $variables(sys) outside cluster!")
+            error("parents of system $(variables(s)) outside cluster!")
     end
     merge_systems(systems)
+#     merge_systems([
+#         sub_system(
+#             s,
+#             [v for v in relevant_variables(s) if v in all_variables]
+#         )
+#         for s in systems
+#     ])
 end
 
 struct JoinTree{S <: DiscreteSystem}
@@ -84,6 +92,7 @@ function JoinTree(cliques::Vector{Vector{S}}, dbn::DiscreteBayesNet{S})::JoinTre
         Graph(length(cliques)),
         Dict([
             i => Cluster([sys_or_id(sys, cliques[i], parent_cliques) for sys in cliques[i]])
+#             i => Cluster([sys for sys in cliques[i]])
             for i in 1:length(cliques)
             ]),
         Dict()
@@ -110,7 +119,23 @@ function JoinTree(cliques::Vector{Vector{S}}, dbn::DiscreteBayesNet{S})::JoinTre
             trees[c1] = trees[c2] = union(c1, c2)
             add_edge!(jt.graph, i1, i2)
             sepset_variables = reduce(vcat, [variables(s) for s in sepset])
+#
+#             # mutual probability of c1:c2 as defined in Leifer
+#             c1_and_c2_sorted = [s for s in systems(dbn) if s in union(c1, c2)]
+#
+#             c1Uc2 = Cluster(c1_and_c2_sorted)
+#
+#             println(string(c1Uc2), " ", sepset_variables)
+#             c1_kronned = sub_system(Cluster([s for s in systems(dbn) if s in c1]), variables(c1Uc2))
+#             c2_kronned = sub_system(Cluster([s for s in systems(dbn) if s in c2]), variables(c1Uc2))
+#
+#             c1_mut_c2_dist = divide_star(
+#                 distribution(c1Uc2),
+#                 multiply_star(distribution(c1_kronned), distribution(c2_kronned))
+#             )
+
             push!(jt.edge_to_sepset, Set([i1, i2]) => identity_system(S, sepset_variables))
+#             push!(jt.edge_to_sepset, Set([i1, i2]) => S(variables(c1Uc2), c1_mut_c2_dist))
         end
         i += 1
     end

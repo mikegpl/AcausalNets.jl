@@ -17,5 +17,11 @@ module Inference
     export
         Evidence,
         Inferrer,
-        infer
+        infer,
+        infer_belief_debug,
+        infer_debug,
+        infer_naive,
+        infer_naive_debug,
+        belief,
+        message
 end # module

@@ -42,6 +42,10 @@ end
 
 
 function apply_evidence(system::DiscreteSystem{D1}, evidence::Evidence{D2}) where {D1, D2 <: D1}
+#     println("applying knowledge about")
+#     println(string(evidence))
+#     println("to")
+#     println(string(system))
     system = shallowcopy(system)
     sys_vars = relevant_variables(system)
     ev_vars = relevant_variables(evidence)
@@ -84,6 +88,7 @@ function apply_observations(
             ]
         relevant_observations = E[
             o for o in observations if
+#             is_subset(Set(variables(o)), Set(variables(cluster)))
             any([
                     is_subset(Set(variables(o)), Set(variables(sys)))
                     for sys in child_systems
