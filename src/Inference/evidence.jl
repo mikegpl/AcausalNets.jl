@@ -78,10 +78,10 @@ function apply_observations(
     observations_dict = Dict{Int, E}()
     for v in keys(jt.vertex_to_cluster)
         cluster = jt.vertex_to_cluster[v]
-#         child_systems = [
-#             sys for (sys, par_cliq) in parent_cliques_dict
-#             if Set(variables(cluster)) == Set(vcat([variables(s) for s in par_cliq]...))
-#             ]
+        child_systems = [
+            sys for (sys, par_cliq) in parent_cliques_dict
+            if Set(variables(cluster)) == Set(vcat([variables(s) for s in par_cliq]...))
+            ]
         relevant_observations = E[
             o for o in observations if
 #             is_subset(Set(variables(o)), Set(variables(cluster)))
