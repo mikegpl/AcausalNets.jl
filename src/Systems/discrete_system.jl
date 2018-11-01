@@ -183,12 +183,12 @@ function sub_system(ds::DiscreteSystem{D}, desired_variables::Vector{Variable}) 
 
     redundant_indices = Vector{Int}(findall(
         (v) -> !(v in unordered_vars),
-        variables(ds)
+        relevant_variables(ds)
     ))
 
     sys_dist = reduce_distribution(
                     distribution(ds),
-                    [ncategories(v) for v in variables(ds)],
+                    [ncategories(v) for v in relevant_variables(ds)],
                     redundant_indices
             )
     non_sys_dist = identity_distribution(D, prod([ncategories(v) for v in non_sys_vars]))

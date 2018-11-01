@@ -22,6 +22,5 @@ To successfully install and run `AcausalNets.jl`, you must also check out in `Pk
 for development:
 
 - https://github.com/mprzewie/QI.jl 
-- https://github.com/JuliaGraphs/GraphPlot.jl
 
 With other versions of the above packages, we don't guarantee successful installation and/or accurate results.
