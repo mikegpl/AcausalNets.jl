@@ -41,6 +41,7 @@ function single_message_pass(from_ind::Int, to_ind::Int, jt::JoinTree{S}) where 
         new_sepset = sub_system(cluster_from, variables(cluster_to))
         jt.edge_to_sepset[edge_set] = sub_system(new_sepset, variables(sepset))
 
+        message_ordered = distribution(old_sepset)
         to_distribution = distribution(cluster_to)
 
         new_to_distribution = multiply_star(
@@ -50,7 +51,7 @@ function single_message_pass(from_ind::Int, to_ind::Int, jt::JoinTree{S}) where 
 
 
         new_cluster_to = S(variables(cluster_to), new_to_distribution)
-#         cluster_to = S(variables(cluster_to), event(to_distribution, message_ordered))
+#         new_cluster_to = S(variables(cluster_to), event(to_distribution, message_ordered))
 #         cluster_to = S(variables(cluster_to), multiply_star(to_distribution, message_ordered))
         jt.vertex_to_cluster[to_ind] = new_cluster_to
     end

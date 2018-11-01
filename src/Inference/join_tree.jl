@@ -61,6 +61,7 @@ function Cluster(systems::Vector{S})::S where S
             push!(all_variables, v)
         end
     end
+#     systems = S[sub_system(s, [v for v in variables(s) if v in all_variables]) for s in systems]
     for s in systems
         all([p in all_variables for p in parents(s)]) ||
             error("parents of system $variables(sys) outside cluster!")
@@ -76,7 +77,7 @@ end
 
 function JoinTree(cliques::Vector{Vector{S}}, dbn::DiscreteBayesNet{S})::JoinTree{S} where S
     candidate_sepsets = []
-    trees = Dict([c => c for c in cliques])
+    trees = Dict([c => Set([c]) for c in cliques])
     chosen_sepsets = Set()
 
     parent_cliques = parent_cliques_dict(cliques, dbn)
@@ -84,6 +85,8 @@ function JoinTree(cliques::Vector{Vector{S}}, dbn::DiscreteBayesNet{S})::JoinTre
         Graph(length(cliques)),
         Dict([
             i => Cluster([sys_or_id(sys, cliques[i], parent_cliques) for sys in cliques[i]])
+#             i => Cluster(cliques[i])
+
             for i in 1:length(cliques)
             ]),
         Dict()
@@ -104,10 +107,10 @@ function JoinTree(cliques::Vector{Vector{S}}, dbn::DiscreteBayesNet{S})::JoinTre
     while length(chosen_sepsets) < n-1
         i1, i2 = candidate_sepsets[i]
         c1, c2 = cliques[i1], cliques[i2]
-        sepset = intersect(c1, c2)
+        sepset = [s for s in systems(dbn) if s in intersect(c1, c2)]
         if (trees[c1] != trees[c2]) && !any([sepset==s for s in chosen_sepsets])
             push!(chosen_sepsets, sepset)
-            trees[c1] = trees[c2] = union(c1, c2)
+            trees[c1] = trees[c2] = union(trees[c1], trees[c2])
             add_edge!(jt.graph, i1, i2)
             sepset_variables = reduce(vcat, [variables(s) for s in sepset])
             push!(jt.edge_to_sepset, Set([i1, i2]) => identity_system(S, sepset_variables))

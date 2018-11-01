@@ -32,7 +32,14 @@ distribution(ds::DiscreteSystem) = ds.distribution
 
 parents_names(ds::DiscreteSystem) = [p.name for p in parents(ds)]
 variables_names(ds::DiscreteSystem) = [v.name for v in variables(ds)]
-Base.string(ds::DiscreteSystem) = join([String(n) for n in variables_names(ds)], ",")
+function Base.string(ds::DiscreteSystem, verbose::Bool=true)
+    result_str = join([string(n) for n in variables_names(ds)], ",")
+    if verbose
+        parents_str = join([String(p.name) for p in parents(ds)], ",")
+        result_str = string(result_str, "|", parents_str)
+    end
+    return result_str
+end
 
 relevant_variables(system::DiscreteSystem) = vcat(system.parents, system.variables)
 
