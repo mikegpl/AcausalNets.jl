@@ -8,7 +8,8 @@ import AcausalNets.Systems:
     DiscreteSystem,
     merge_systems,
     reduce_distribution,
-    permute_system
+    permute_system,
+    sub_system
 
 import AcausalNets.Inference:
     apply_evidence
@@ -52,23 +53,7 @@ function infer_naive_debug(
         variables(evidence_cluster),
         distribution(evidence_cluster) / tr(distribution(evidence_cluster))
         )
-
-    # TODO subsystem function
-    inferred_vars = variables(inferred_cluster)
-    to_trace_out_vars = setdiff(inferred_vars, vars_to_infer)
-    inferred_dims = [ncategories(v) for v in inferred_vars]
-    to_trace_out_ind = Int64[
-            findfirst([v==var for var in inferred_vars]) for v in to_trace_out_vars
-            ]
-
-    inferred_distribution = reduce_distribution(
-            distribution(inferred_cluster), inferred_dims, to_trace_out_ind
-        )
-    inferred_system = S(
-        [v for v in inferred_vars if v in vars_to_infer],
-        inferred_distribution
-    )
-    new_variable_indexing = Int64[findfirst([v == iv for iv in variables(inferred_system)]) for v in vars_to_infer]
+    inference_result = sub_system(inferred_cluster, vars_to_infer)
     intermediate_elements = (
         dbn,
         cluster,
@@ -77,6 +62,6 @@ function infer_naive_debug(
         inferred_cluster
     )
 
-    inference_result = permute_system(inferred_system, new_variable_indexing)
+#     inference_result = permute_system(inferred_system, new_variable_indexing)
     inference_result, intermediate_elements
 end
