@@ -177,7 +177,7 @@ function permute_system(ds::DiscreteSystem{D}, new_variable_indexing::Vector{Int
 end
 
 function sub_system(ds::DiscreteSystem{D}, desired_variables::Vector{Variable}) where D
-    sys_vars = Variable[v for v in desired_variables if v in relevant_variables(ds)]
+    sys_vars = Variable[v for v in relevant_variables(ds) if v in desired_variables]
     non_sys_vars = Variable[v for v in desired_variables if !(v in sys_vars)]
     unordered_vars = vcat(sys_vars, non_sys_vars)
 
