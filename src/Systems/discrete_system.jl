@@ -46,25 +46,28 @@ relevant_variables(system::DiscreteSystem) = vcat(system.parents, system.variabl
 
 Common.ncategories(ds::DiscreteSystem) = ncategories(variables(ds))
 
-function enforce_parents_order(ds::DiscreteSystem{D}, existing_variables::Vector{Variable}) where D
-    new_parents_order = [v for v in existing_variables if v in parents(ds)]
-    old_parents_order = parents(ds)
+# function enforce_parents_order(ds::DiscreteSystem{D}, existing_variables::Vector{Variable}) where D
+#     new_parents_order = [v for v in existing_variables if v in parents(ds)]
+#     old_parents_order = parents(ds)
+#
+#     new_parents_indexing = Vector{Int64}([findfirst([p == o for o in old_parents_order]) for p in new_parents_order])
+#     new_variables_indexing = Vector(1:length(variables(ds)))
+#     permute_system(ds, new_parents_indexing, new_variables_indexing)
+# end
 
-    new_parents_indexing = Vector{Int64}([findfirst([p == o for o in old_parents_order]) for p in new_parents_order])
-    new_variables_indexing = Vector(1:length(variables(ds)))
-    permute_system(ds, new_parents_indexing, new_variables_indexing)
-end
+function expand_parents(ds::S, existing_systems::Vector{S})::S where {D, S <: DiscreteSystem{D}}
+    all_parents = Vector{Variable}(vcat([
+        variables(sys) for sys in existing_systems
+        if !isempty(intersect(parents(ds), variables(sys)))
+    ]...))
 
-function expand_parents(ds::DiscreteSystem{D}, existing_systems::Vector{DiscreteSystem{D}}) where D
-    parent_systems = [sys for sys in existing_systems if any([v in parents(ds) for v in variables(sys)])]
-    for sys in parent_systems
-        for var in sys.variables
-            if !(var in parents(ds))
-                ds = prepend_parent(ds, var)
-            end
-        end
-    end
-    ds
+    S(
+        all_parents,
+        variables(ds),
+        distribution(
+            sub_system(ds, vcat(all_parents, variables(ds)))
+        )
+    )
 end
 
 function is_parent(potential_parent::DiscreteSystem{D}, potential_child::DiscreteSystem{D}) where D
@@ -204,9 +207,9 @@ function sub_system(ds::DiscreteSystem{D}, desired_variables::Vector{Variable}) 
     ordered_indices = Int[
             findfirst(
                 (v) -> v == var,
-                desired_variables
+                unordered_vars
             )
-            for var in unordered_vars
+            for var in desired_variables
         ]
     ordered_dist = permute_distribution(
                     unordered_dist,
