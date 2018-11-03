@@ -82,7 +82,7 @@ end
 
 
 
-function merge_systems(systems::Vector{S}, verbose::Bool = false)::S where {D, S <: DiscreteSystem{D}}
+function merge_systems(systems::Vector{S}, verbose::Bool = true)::S where {D, S <: DiscreteSystem{D}}
     """
     We assume that systems are sorted topologically (parents first)
     We adopt the ordering defined in
@@ -108,44 +108,19 @@ function merge_systems(systems::Vector{S}, verbose::Bool = false)::S where {D, S
     target_size = prod([ncategories(v) for v in all_relevant_variables])
     result_distribution = identity_distribution(D, target_size)
 
+    # order of multiplication defined in
+    # https://arxiv.org/pdf/0708.1337.pdf
+    # (100)
+    # A1 * A2 * A3 = ((A1 * A2) * A3)
     debug_str = "Id($target_size)"
     for sys in systems
-        sys_distribution = distribution(sys)
-        sys_variables = relevant_variables(sys)
-        sys_indices = Int64[
-            findfirst([v == var for var in all_relevant_variables])
-            for v in sys_variables
-            ]
-        sys_dimensions = [ncategories(v) for v in sys_variables]
-
-        other_variables = [v for v in all_relevant_variables if !(v in sys_variables)]
-        other_indices = Int64[
-            findfirst([v == var for var in all_relevant_variables])
-            for v in other_variables
-            ]
-        other_dimensions = [ncategories(v) for v in other_variables]
-        other_distribution = identity_distribution(D, prod(other_dimensions))
-
-        factor_distribution = multiply_kron(sys_distribution, other_distribution)
-        factor_indices = vcat(sys_indices, other_indices)
-        factor_dimensions = vcat(sys_dimensions, other_dimensions)
-
-        right_order = invperm(factor_indices)
-        ordered_distribution = permute_distribution(factor_distribution, factor_dimensions, right_order)
-
-        # order of multiplication defined in
-        # https://arxiv.org/pdf/0708.1337.pdf
-        # (100)
-        # A1 * A2 * A3 = ((A1 * A2) * A3)
+        ordered_distribution = distribution(sub_system(sys, all_relevant_variables))
         result_distribution = multiply_star(result_distribution, ordered_distribution)
         debug_str = string(
             "( ",
             debug_str,
             " * ro",
-            string([v.name for v in variables(sys)]...),
-            "|",
-
-            string([v.name for v in parents(sys)]...),
+            string(sys,true),
             " )"
         )
     end
@@ -153,7 +128,7 @@ function merge_systems(systems::Vector{S}, verbose::Bool = false)::S where {D, S
     if verbose
         println(debug_str)
     end
-    DiscreteSystem{D}(all_parents, all_variables, result_distribution)
+    S(all_parents, all_variables, result_distribution)
 end
 
 function identity_system(system::DiscreteSystem{D})::DiscreteSystem{D} where D
