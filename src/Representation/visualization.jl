@@ -6,7 +6,7 @@ visualization:
 =#
 
 using GraphPlot
-
+using LightGraphs
 import AcausalNets.Structures: DiscreteBayesNet
 
 import AcausalNets.Inference: JoinTree, Inferrer
@@ -19,7 +19,9 @@ end
 
 function Base.show(jt::JoinTree, verbose::Bool=true)
     node_names = ["$i:" * string(jt.vertex_to_cluster[i], verbose) for i in 1:length(jt.vertex_to_cluster)]
-    return gplot(jt.graph, nodelabel = node_names)
+    edge_names = [string(jt.edge_to_sepset[Set([src(e), dst(e)])], verbose) for e in edges(jt.graph)]
+
+    return gplot(jt.graph, nodelabel = node_names, edgelabel = edge_names)
 end
 
 Base.show(inferrer::Inferrer) = show(inferrer.bayes_net)
