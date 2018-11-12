@@ -72,7 +72,13 @@ end
 
 
 
-function merge_systems(systems::Vector{S})::S where {D, S <: DiscreteSystem{D}}
+function merge_systems(systems::Vector{S}, verbose::Bool = false)::S where {D, S <: DiscreteSystem{D}}
+    """
+    We assume that systems are sorted topologically (parents first)
+    We adopt the ordering defined in
+    https://arxiv.org/pdf/0708.1337.pdf
+    (equation 100)
+    """
     all_variables = Variable[]
     all_parents = Variable[]
     for s in systems
@@ -92,6 +98,7 @@ function merge_systems(systems::Vector{S})::S where {D, S <: DiscreteSystem{D}}
     target_size = prod([ncategories(v) for v in all_relevant_variables])
     result_distribution = identity_distribution(D, target_size)
 
+    debug_str = "Id($target_size)"
     for sys in systems
         sys_distribution = distribution(sys)
         sys_variables = relevant_variables(sys)
@@ -116,11 +123,25 @@ function merge_systems(systems::Vector{S})::S where {D, S <: DiscreteSystem{D}}
         right_order = invperm(factor_indices)
         ordered_distribution = permute_distribution(factor_distribution, factor_dimensions, right_order)
 
-        # our order of multiplication
+        # order of multiplication defined in
+        # https://arxiv.org/pdf/0708.1337.pdf
+        # (100)
+        # A1 * A2 * A3 = ((A1 * A2) * A3)
         result_distribution = multiply_star(result_distribution, ordered_distribution)
+        debug_str = string(
+            "( ",
+            debug_str,
+            " * ro",
+            string([v.name for v in variables(sys)]...),
+            "|",
 
-        # original (dr. Kurzyk) order of multiplication
-#         result_distribution = multiply_star(ordered_distribution, result_distribution)
+            string([v.name for v in parents(sys)]...),
+            " )"
+        )
+    end
+
+    if verbose
+        println(debug_str)
     end
     DiscreteSystem{D}(all_parents, all_variables, result_distribution)
 end
@@ -153,4 +174,37 @@ end
 function permute_system(ds::DiscreteSystem{D}, new_variable_indexing::Vector{Int64}) where D
     length(parents(ds)) == 0 || error("Parents permutation must be specified for this system!")
     permute_system(ds, Int64[], new_variable_indexing)
+end
+
+function sub_system(ds::DiscreteSystem{D}, desired_variables::Vector{Variable}) where D
+    sys_vars = Variable[v for v in relevant_variables(ds) if v in desired_variables]
+    non_sys_vars = Variable[v for v in desired_variables if !(v in sys_vars)]
+    unordered_vars = vcat(sys_vars, non_sys_vars)
+
+    redundant_indices = Vector{Int}(findall(
+        (v) -> !(v in unordered_vars),
+        relevant_variables(ds)
+    ))
+
+    sys_dist = reduce_distribution(
+                    distribution(ds),
+                    [ncategories(v) for v in relevant_variables(ds)],
+                    redundant_indices
+            )
+    non_sys_dist = identity_distribution(D, prod([ncategories(v) for v in non_sys_vars]))
+    unordered_dist = multiply_kron(sys_dist, non_sys_dist)
+
+    ordered_indices = Int[
+            findfirst(
+                (v) -> v == var,
+                desired_variables
+            )
+            for var in unordered_vars
+        ]
+    ordered_dist = permute_distribution(
+                    unordered_dist,
+                    Int[ncategories(v) for v in unordered_vars],
+                    ordered_indices
+            )
+    DiscreteSystem{D}(desired_variables, ordered_dist)
 end

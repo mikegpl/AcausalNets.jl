@@ -91,22 +91,7 @@ function infer_debug(
                     ])
         ])
 
-    # TODO subsystem function
-    inferred_vars = variables(inferred_cluster)
-    to_trace_out_vars = setdiff(inferred_vars, vars_to_infer)
-    inferred_dims = [ncategories(v) for v in inferred_vars]
-    to_trace_out_ind = Int64[
-            findfirst([v==var for var in inferred_vars]) for v in to_trace_out_vars
-            ]
-
-    inferred_distribution = reduce_distribution(
-            distribution(inferred_cluster), inferred_dims, to_trace_out_ind
-        )
-    inferred_system = S(
-        [v for v in inferred_vars if v in vars_to_infer],
-        inferred_distribution
-    )
-    new_variable_indexing = Int64[findfirst([v == iv for iv in variables(inferred_system)]) for v in vars_to_infer]
+    inference_result = sub_system(inferred_cluster, vars_to_infer)
     intermediate_elements = (
         dbn,
         mg,
@@ -120,6 +105,5 @@ function infer_debug(
         jt,
     )
 
-    inference_result = permute_system(inferred_system, new_variable_indexing)
     inference_result, intermediate_elements
 end
