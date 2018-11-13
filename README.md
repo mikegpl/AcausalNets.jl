@@ -7,7 +7,7 @@
 
 ### Julia version
 
-The package has been implemented and tested in Julia v0.7. Recommended installation source:
+The package has been implemented and tested in Julia v1.0. Recommended installation source:
 
 https://julialang.org/downloads/
 
