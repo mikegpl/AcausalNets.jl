@@ -1,7 +1,7 @@
 authors = ["Marcin Przewięźlikowski <m.przewie@gmail.com>", "Michał Grabowski <mkg.grabowski@gmail.com"]
 name = "AcausalNets"
 uuid = "ca501d18-a2c3-11e8-250e-d5355d95c453"
-version = "0.1.0"
+version = "0.0.0"
 
 [deps]
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
