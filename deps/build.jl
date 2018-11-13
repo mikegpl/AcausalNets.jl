@@ -6,5 +6,5 @@ build:
 =#
 
 if !("QI" in keys(Pkg.installed()))
-    Pkg.clone("https://github.com/mprzewie/QI.jl")
+    Pkg.clone("https://github.com/ZKSI/QI.jl")
 end

@@ -21,7 +21,7 @@ function check_distribution(
     dimensions[1] == dimensions[2] == total_ncategories
 end
 
-permute_distribution(d::QuantumDistribution, dimensions::Vector{Int64}, order::Vector{Int64}) = permute_systems(d, dimensions, order)
+permute_distribution(d::QuantumDistribution, dimensions::Vector{Int64}, order::Vector{Int64}) = permutesystems(d, dimensions, order)
 
 function reduce_distribution(d::QuantumDistribution, dimensions::Vector{Int64}, reduce_ind::Vector{Int64})
     if length(reduce_ind) > 0
