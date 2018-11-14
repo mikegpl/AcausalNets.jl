@@ -48,19 +48,14 @@ function infer_belief(
             E <: Evidence{D2}
         }
     length(vars_to_infer) > 0 || error("At least one variable to infer must be specified!")
-    mg = moral_graph(dbn)
-    enforced_mg = enforce_clique(dbn, mg, vars_to_infer)
-    tri_mg, cliques = triangulate(enforced_mg, dbn)
-    parent_cliques = parent_cliques_dict(cliques, dbn)
-    initialized_jt = JoinTree(cliques, dbn)
-    observations_jt = apply_observations(
-                        initialized_jt,
-                        parent_cliques,
+    observations_jt = unpropagated_join_tree(
+                        dbn,
+                        vars_to_infer,
                         observations
                     )
     inferred_cluster_ind = first([
             i
-            for (i, sys) in initialized_jt.vertex_to_cluster
+            for (i, sys) in observations_jt.vertex_to_cluster
             if all([
                 v in variables(sys)
                 for v in vars_to_infer
@@ -70,16 +65,9 @@ function infer_belief(
     inferred_cluster = belief(observations_jt, inferred_cluster_ind, messages_no)
     inference_result = sub_system(inferred_cluster, vars_to_infer)
     intermediate_elements = (
-        dbn,
-        mg,
-        enforced_mg,
-        tri_mg,
-        cliques,
-        parent_cliques,
-        initialized_jt,
         observations_jt,
         messages_no,
-         inferred_cluster_ind,
+        inferred_cluster_ind,
         inferred_cluster
     )
     return inference_result, intermediate_elements

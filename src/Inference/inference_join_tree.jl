@@ -37,7 +37,8 @@ import AcausalNets.Inference:
     enforce_clique,
     triangulate,
     apply_observations,
-    shallowcopy
+    shallowcopy,
+    unpropagated_join_tree
 
 
 function infer_join_tree(
@@ -51,15 +52,9 @@ function infer_join_tree(
             E <: Evidence{D2}
         }
     length(vars_to_infer) > 0 || error("At least one variable to infer must be specified!")
-    mg = moral_graph(dbn)
-    enforced_mg = enforce_clique(dbn, mg, vars_to_infer)
-    tri_mg, cliques = triangulate(enforced_mg, dbn)
-    parent_cliques = parent_cliques_dict(cliques, dbn)
-    initialized_jt = JoinTree(cliques, dbn)
-
-    observations_jt = apply_observations(
-                        initialized_jt,
-                        parent_cliques,
+    observations_jt = unpropagated_join_tree(
+                        dbn,
+                        vars_to_infer,
                         observations
                     )
     propagated_jt = global_propagation(observations_jt)
@@ -75,13 +70,6 @@ function infer_join_tree(
 
     inference_result = sub_system(inferred_cluster, vars_to_infer)
     intermediate_elements = (
-        dbn,
-        mg,
-        enforced_mg,
-        tri_mg,
-        cliques,
-        parent_cliques,
-        initialized_jt,
         observations_jt,
         propagated_jt,
         jt,
