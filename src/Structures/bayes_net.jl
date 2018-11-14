@@ -8,7 +8,6 @@ using LightGraphs
 import AcausalNets.Systems:
     DiscreteSystem,
     expand_parents,
-    enforce_parents_order,
     parents,
     variables,
     variables_names
@@ -56,11 +55,9 @@ function Base.push!(dbn::DiscreteBayesNet{S}, system::S) where S <: DiscreteSyst
     check_variables(system, dbn) || error("Variables of the system already present in the structure!")
 
     expanded_system = expand_parents(system, dbn.systems)
-    perm_system = enforce_parents_order(expanded_system, variables(dbn))
-
     !add_vertex!(dbn.dag)
-    push!(dbn.systems, perm_system)
-    for p in perm_system.parents
+    push!(dbn.systems, expanded_system)
+    for p in expanded_system.parents
         add_edge!(dbn.dag, variable_to_node(p, dbn), length(dbn.systems))
     end
 

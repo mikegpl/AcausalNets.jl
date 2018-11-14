@@ -19,10 +19,6 @@ struct DiscreteSystem{D}
     end
 end
 
-# Base.:(==)(ds1::DiscreteSystem{D}, ds2::DiscreteSystem{D}) where D =
-#     parents(ds1) == parents(ds2) &&
-#     variables(ds1) == variables(ds2)
-
 DiscreteSystem{D}(variables::Vector{Variable}, distribution::D) where D = DiscreteSystem{D}(Variable[], variables, distribution)
 
 
@@ -32,32 +28,34 @@ distribution(ds::DiscreteSystem) = ds.distribution
 
 parents_names(ds::DiscreteSystem) = [p.name for p in parents(ds)]
 variables_names(ds::DiscreteSystem) = [v.name for v in variables(ds)]
-Base.string(ds::DiscreteSystem) = join([String(n) for n in variables_names(ds)], ",")
+function Base.string(ds::DiscreteSystem, verbose::Bool=true)
+    result_str = join([string(n) for n in variables_names(ds)], ",")
+    if verbose
+        parents_str = join([String(p.name) for p in parents(ds)], ",")
+        result_str = string(result_str, "|", parents_str)
+    end
+    return result_str
+end
 
 relevant_variables(system::DiscreteSystem) = vcat(system.parents, system.variables)
 
 
 Common.ncategories(ds::DiscreteSystem) = ncategories(variables(ds))
 
-function enforce_parents_order(ds::DiscreteSystem{D}, existing_variables::Vector{Variable}) where D
-    new_parents_order = [v for v in existing_variables if v in parents(ds)]
-    old_parents_order = parents(ds)
 
-    new_parents_indexing = Vector{Int64}([findfirst([p == o for o in old_parents_order]) for p in new_parents_order])
-    new_variables_indexing = Vector(1:length(variables(ds)))
-    permute_system(ds, new_parents_indexing, new_variables_indexing)
-end
+function expand_parents(ds::S, existing_systems::Vector{S})::S where {D, S <: DiscreteSystem{D}}
+    all_parents = Vector{Variable}(vcat([
+        variables(sys) for sys in existing_systems
+        if !isempty(intersect(parents(ds), variables(sys)))
+    ]...))
 
-function expand_parents(ds::DiscreteSystem{D}, existing_systems::Vector{DiscreteSystem{D}}) where D
-    parent_systems = [sys for sys in existing_systems if any([v in parents(ds) for v in variables(sys)])]
-    for sys in parent_systems
-        for var in sys.variables
-            if !(var in parents(ds))
-                ds = prepend_parent(ds, var)
-            end
-        end
-    end
-    ds
+    S(
+        all_parents,
+        variables(ds),
+        distribution(
+            sub_system(ds, vcat(all_parents, variables(ds)))
+        )
+    )
 end
 
 function is_parent(potential_parent::DiscreteSystem{D}, potential_child::DiscreteSystem{D}) where D
@@ -98,44 +96,19 @@ function merge_systems(systems::Vector{S}, verbose::Bool = false)::S where {D, S
     target_size = prod([ncategories(v) for v in all_relevant_variables])
     result_distribution = identity_distribution(D, target_size)
 
+    # order of multiplication defined in
+    # https://arxiv.org/pdf/0708.1337.pdf
+    # (100)
+    # A1 * A2 * A3 = ((A1 * A2) * A3)
     debug_str = "Id($target_size)"
     for sys in systems
-        sys_distribution = distribution(sys)
-        sys_variables = relevant_variables(sys)
-        sys_indices = Int64[
-            findfirst([v == var for var in all_relevant_variables])
-            for v in sys_variables
-            ]
-        sys_dimensions = [ncategories(v) for v in sys_variables]
-
-        other_variables = [v for v in all_relevant_variables if !(v in sys_variables)]
-        other_indices = Int64[
-            findfirst([v == var for var in all_relevant_variables])
-            for v in other_variables
-            ]
-        other_dimensions = [ncategories(v) for v in other_variables]
-        other_distribution = identity_distribution(D, prod(other_dimensions))
-
-        factor_distribution = multiply_kron(sys_distribution, other_distribution)
-        factor_indices = vcat(sys_indices, other_indices)
-        factor_dimensions = vcat(sys_dimensions, other_dimensions)
-
-        right_order = invperm(factor_indices)
-        ordered_distribution = permute_distribution(factor_distribution, factor_dimensions, right_order)
-
-        # order of multiplication defined in
-        # https://arxiv.org/pdf/0708.1337.pdf
-        # (100)
-        # A1 * A2 * A3 = ((A1 * A2) * A3)
+        ordered_distribution = distribution(sub_system(sys, all_relevant_variables))
         result_distribution = multiply_star(result_distribution, ordered_distribution)
         debug_str = string(
             "( ",
             debug_str,
             " * ro",
-            string([v.name for v in variables(sys)]...),
-            "|",
-
-            string([v.name for v in parents(sys)]...),
+            string(sys,true),
             " )"
         )
     end
@@ -143,7 +116,7 @@ function merge_systems(systems::Vector{S}, verbose::Bool = false)::S where {D, S
     if verbose
         println(debug_str)
     end
-    DiscreteSystem{D}(all_parents, all_variables, result_distribution)
+    S(all_parents, all_variables, result_distribution)
 end
 
 function identity_system(system::DiscreteSystem{D})::DiscreteSystem{D} where D
@@ -197,9 +170,9 @@ function sub_system(ds::DiscreteSystem{D}, desired_variables::Vector{Variable}) 
     ordered_indices = Int[
             findfirst(
                 (v) -> v == var,
-                desired_variables
+                unordered_vars
             )
-            for var in unordered_vars
+            for var in desired_variables
         ]
     ordered_dist = permute_distribution(
                     unordered_dist,
