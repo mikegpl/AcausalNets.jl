@@ -9,8 +9,7 @@ using GraphPlot
 using LightGraphs
 import AcausalNets.Structures: DiscreteBayesNet
 
-import AcausalNets.Inference: JoinTree, Inferrer
-
+import AcausalNets.Inference: JoinTree
 
 function Base.show(dbn::DiscreteBayesNet, verbose::Bool=false)
     node_names = [string(sys, verbose) for sys in dbn.systems]
@@ -23,5 +22,3 @@ function Base.show(jt::JoinTree, verbose::Bool=true)
 
     return gplot(jt.graph, nodelabel = node_names, edgelabel = edge_names)
 end
-
-Base.show(inferrer::Inferrer) = show(inferrer.bayes_net)

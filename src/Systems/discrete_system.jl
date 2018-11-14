@@ -19,10 +19,6 @@ struct DiscreteSystem{D}
     end
 end
 
-# Base.:(==)(ds1::DiscreteSystem{D}, ds2::DiscreteSystem{D}) where D =
-#     parents(ds1) == parents(ds2) &&
-#     variables(ds1) == variables(ds2)
-
 DiscreteSystem{D}(variables::Vector{Variable}, distribution::D) where D = DiscreteSystem{D}(Variable[], variables, distribution)
 
 
@@ -46,14 +42,6 @@ relevant_variables(system::DiscreteSystem) = vcat(system.parents, system.variabl
 
 Common.ncategories(ds::DiscreteSystem) = ncategories(variables(ds))
 
-# function enforce_parents_order(ds::DiscreteSystem{D}, existing_variables::Vector{Variable}) where D
-#     new_parents_order = [v for v in existing_variables if v in parents(ds)]
-#     old_parents_order = parents(ds)
-#
-#     new_parents_indexing = Vector{Int64}([findfirst([p == o for o in old_parents_order]) for p in new_parents_order])
-#     new_variables_indexing = Vector(1:length(variables(ds)))
-#     permute_system(ds, new_parents_indexing, new_variables_indexing)
-# end
 
 function expand_parents(ds::S, existing_systems::Vector{S})::S where {D, S <: DiscreteSystem{D}}
     all_parents = Vector{Variable}(vcat([
@@ -82,7 +70,7 @@ end
 
 
 
-function merge_systems(systems::Vector{S}, verbose::Bool = true)::S where {D, S <: DiscreteSystem{D}}
+function merge_systems(systems::Vector{S}, verbose::Bool = false)::S where {D, S <: DiscreteSystem{D}}
     """
     We assume that systems are sorted topologically (parents first)
     We adopt the ordering defined in

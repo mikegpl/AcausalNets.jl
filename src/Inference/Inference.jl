@@ -8,14 +8,17 @@ Inference:
 module Inference
     include("clusterization.jl")
     include("join_tree.jl")
-    include("evidence_propagation.jl")
+#     include("evidence_propagation.jl")
     include("evidence.jl")
-    include("inferrer.jl")
-    include("naive_inferrer.jl")
-
+    include("inference_join_tree.jl")
+    include("inference_naive.jl")
+    include("inference_belief.jl")
+    include("inference_api.jl")
 
     export
         Evidence,
-        Inferrer,
-        infer
+        infer,
+        infer_join_tree,
+        infer_naive,
+        infer_belief
 end # module

@@ -8,7 +8,6 @@ using LightGraphs
 import AcausalNets.Systems:
     DiscreteSystem,
     expand_parents,
-    enforce_parents_order,
     parents,
     variables,
     variables_names

@@ -15,21 +15,7 @@ import AcausalNets.Inference:
     apply_evidence
 
 function infer_naive(
-        inferrer::Inferrer{S},
-        vars_to_infer::Vector{Variable},
-        observations::Vector{E} = E[],
-        ) where {
-            D1,
-            D2 <: D1,
-            S <: DiscreteSystem{D1},
-            E <: Evidence{D2}
-        }
-    result, _ = infer_naive_debug(inferrer, vars_to_infer, observations)
-    return result
-end
-
-function infer_naive_debug(
-        inferrer::Inferrer{S},
+        dbn::DiscreteBayesNet{S},
         vars_to_infer::Vector{Variable},
         observations::Vector{E} = E[]
         ) where {
@@ -41,10 +27,8 @@ function infer_naive_debug(
     """
     Naive version of inference, which merges all distributions into one and traces out the result.
     This is simple, but effectively creates a system of all possible variable combinations.
-    # TODO this can be simplified, since there's no join tree involved
     """
     length(vars_to_infer) > 0 || error("At least one variable to infer must be specified!")
-    dbn = inferrer.bayes_net
     cluster = merge_systems(systems(dbn))
     observations = merge_systems(observations)
 

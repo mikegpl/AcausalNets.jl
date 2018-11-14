@@ -1,14 +1,21 @@
 #=
-join_tree_messaging:
+huang_inference:
 - Julia version: 0.7
 - Author: marcin
-- Date: 2018-08-19
+- Date: 2018-09-11
 =#
 
 using LightGraphs
-using QI
+
+import AcausalNets.Common:
+    Variable,
+    ncategories
 
 import AcausalNets.Systems:
+    DiscreteSystem,
+    variables,
+    distribution,
+    permute_system,
     ncategories,
     reduce_distribution,
     multiply_star,
@@ -18,19 +25,74 @@ import AcausalNets.Systems:
     permute_distribution,
     sub_system
 
-import AcausalNets.Algebra:
-    star, unstar, event
-
 import AcausalNets.Structures:
     DiscreteBayesNet
 
 import AcausalNets.Inference:
     JoinTree,
+    normalize,
+    ParentCliquesDict,
+    parent_cliques_dict,
+    moral_graph,
+    enforce_clique,
+    triangulate,
+    apply_observations,
     shallowcopy
+
+
+function infer_join_tree(
+        dbn::DiscreteBayesNet{S},
+        vars_to_infer::Vector{Variable},
+        observations::Vector{E} = E[]
+        ) where {
+            D1,
+            D2 <: D1,
+            S <: DiscreteSystem{D1},
+            E <: Evidence{D2}
+        }
+    length(vars_to_infer) > 0 || error("At least one variable to infer must be specified!")
+    mg = moral_graph(dbn)
+    enforced_mg = enforce_clique(dbn, mg, vars_to_infer)
+    tri_mg, cliques = triangulate(enforced_mg, dbn)
+    parent_cliques = parent_cliques_dict(cliques, dbn)
+    initialized_jt = JoinTree(cliques, dbn)
+
+    observations_jt = apply_observations(
+                        initialized_jt,
+                        parent_cliques,
+                        observations
+                    )
+    propagated_jt = global_propagation(observations_jt)
+    jt = normalize(propagated_jt)
+    inferred_cluster = first([
+            sys
+            for (i, sys) in jt.vertex_to_cluster
+            if all([
+                    v in variables(sys)
+                    for v in vars_to_infer
+                    ])
+        ])
+
+    inference_result = sub_system(inferred_cluster, vars_to_infer)
+    intermediate_elements = (
+        dbn,
+        mg,
+        enforced_mg,
+        tri_mg,
+        cliques,
+        parent_cliques,
+        initialized_jt,
+        observations_jt,
+        propagated_jt,
+        jt,
+    )
+
+    inference_result, intermediate_elements
+end
+
 
 function single_message_pass(from_ind::Int, to_ind::Int, jt::JoinTree{S}) where S
     if (from_ind, to_ind) in edges(jt.graph)
-        println("message2 from $from_ind to $to_ind")
         jt = shallowcopy(jt)
         cluster_from = jt.vertex_to_cluster[from_ind]
         cluster_to = jt.vertex_to_cluster[to_ind]
@@ -51,8 +113,6 @@ function single_message_pass(from_ind::Int, to_ind::Int, jt::JoinTree{S}) where 
 
 
         new_cluster_to = S(variables(cluster_to), new_to_distribution)
-#         new_cluster_to = S(variables(cluster_to), event(to_distribution, message_ordered))
-#         cluster_to = S(variables(cluster_to), multiply_star(to_distribution, message_ordered))
         jt.vertex_to_cluster[to_ind] = new_cluster_to
     end
     return jt
