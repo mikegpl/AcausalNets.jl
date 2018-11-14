@@ -1,6 +1,6 @@
 #=
 acausal_net:
-- Julia version: 0.7
+- Julia version: 1.0
 - Author: marcin
 - Date: 2018-07-28
 =#
