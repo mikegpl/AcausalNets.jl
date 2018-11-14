@@ -1,6 +1,6 @@
 #=
 huang_inference:
-- Julia version: 0.7
+- Julia version: 1.0
 - Author: marcin
 - Date: 2018-09-11
 =#

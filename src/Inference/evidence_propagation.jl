@@ -1,6 +1,6 @@
 #=
 join_tree_messaging:
-- Julia version: 0.7
+- Julia version: 1.0
 - Author: marcin
 - Date: 2018-08-19
 =#
