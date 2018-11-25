@@ -6,7 +6,6 @@ belief_inferrer:
 =#
 
  using LightGraphs
- using QI
 
  import AcausalNets.Systems:
      ncategories,
@@ -18,9 +17,6 @@ belief_inferrer:
      permute_distribution,
      sub_system
 
- import AcausalNets.Algebra:
-     star, unstar, event
-
  import AcausalNets.Structures:
      DiscreteBayesNet
 
@@ -28,9 +24,9 @@ belief_inferrer:
      JoinTree,
      shallowcopy,
      enforce_clique,
-    triangulate,
-    apply_observations,
-    global_propagation
+     triangulate,
+     apply_observations,
+     global_propagation
 
 import AcausalNets.Common:
     Variable,
@@ -73,7 +69,7 @@ function infer_belief(
     return inference_result, intermediate_elements
 end
 
-function message(jt::JoinTree{S}, from::Int, to::Int, t::Int) where S
+function message(jt::JoinTree{S}, from::Int, to::Int, t::Int) where {D, S <: DiscreteSystem{D}}
     from_neighbors = neighbors(jt.graph, from)
     to in from_neighbors || error("$from and $to are not neighbors!")
     if t == 0
@@ -89,17 +85,17 @@ function message(jt::JoinTree{S}, from::Int, to::Int, t::Int) where S
     msg_distribution = multiply_star(
                     distribution(from_system),
                     multiply_star(
-                        prod([distribution(m) for m in previous_messages]),
+                        D(prod([distribution(m) for m in previous_messages])),
                         distribution(mutual_system(from_system, to_system))
                     )
     )
     msg_from = S(variables(from_system), msg_distribution)
     msg_to = sub_system(msg_from, variables(to_system))
     normalized_dist = distribution(msg_to) / tr(distribution(msg_to))
-    S(variables(msg_to), normalized_dist)
+    S(variables(msg_to), D(normalized_dist))
 end
 
-function belief(jt::JoinTree{S}, cluster_ind::Int, t::Int)::S where S
+function belief(jt::JoinTree{S}, cluster_ind::Int, t::Int)::S where  {D, S <: DiscreteSystem{D}}
     sys = jt.vertex_to_cluster[cluster_ind]
     messages = vcat(
         [identity_system(sys)],
@@ -107,10 +103,10 @@ function belief(jt::JoinTree{S}, cluster_ind::Int, t::Int)::S where S
     )
     unnormalized_dist = multiply_star(
         distribution(sys),
-        prod([distribution(m) for m in messages])
+        D(prod([distribution(m) for m in messages]))
     )
     normalized_dist = unnormalized_dist / tr(unnormalized_dist)
-    S(variables(sys), normalized_dist)
+    S(variables(sys), D(normalized_dist))
 end
 
 function mutual_system(from::S, to::S) where {D, S <: DiscreteSystem{D}}

@@ -11,6 +11,7 @@ module Systems
         variables_names,
         relevant_variables,
         is_parent,
-        DiscreteQuantumSystem
+        DiscreteQuantumSystem,
+        QuantumDistribution
 
 end #module

@@ -158,14 +158,14 @@ function Cluster(systems::Vector{S})::S where S
     merge_systems(systems)
 end
 
-function normalize(jt::JoinTree{S}) where S
+function normalize(jt::JoinTree{S}) where {D, S <: DiscreteSystem{D}}
     JoinTree(
         jt.graph,
         Dict([
                 v => S(
                     c.parents,
                     c.variables,
-                    c.distribution / sum_distribution(c.distribution)
+                    D(c.distribution / sum_distribution(c.distribution))
                     )
                 for (v, c) in jt.vertex_to_cluster
             ]),
@@ -173,7 +173,7 @@ function normalize(jt::JoinTree{S}) where S
                 e => S(
                     s.parents,
                     s.variables,
-                    s.distribution / sum_distribution(s.distribution)
+                    D(s.distribution / sum_distribution(s.distribution))
                     )
                 for (e, s) in jt.edge_to_sepset
             ])

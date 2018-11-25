@@ -23,6 +23,3 @@ const star = star_n(1.0)
 # https://arxiv.org/pdf/0708.1337.pdf
 # (equation 32)
 unstar(C, B)::AbstractMatrix = star(pinv(B), C) # odwrotność star (za #6)
-
-event(system::AbstractMatrix, e::AbstractMatrix) = (e * system * e) / tr(e * system)
-

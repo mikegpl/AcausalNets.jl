@@ -7,4 +7,4 @@ common:
 
 using LinearAlgebra
 
-eye(size::Int64)::Diagonal = Diagonal(ones(size))
+eye(size::Int64)::AbstractMatrix = diagm(0 => ones(size))

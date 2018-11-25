@@ -45,7 +45,5 @@ function infer_naive(
         evidence_cluster,
         inferred_cluster
     )
-
-#     inference_result = permute_system(inferred_system, new_variable_indexing)
     inference_result, intermediate_elements
 end
