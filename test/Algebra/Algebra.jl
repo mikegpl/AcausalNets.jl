@@ -4,9 +4,10 @@ Algebra:
 - Author: mikegpl
 - Date: 2018-11-15
 =#
+using AcausalNets.Algebra
 
-module Algebra
-    for file in ["common.jl", "distribution_operations"]
-        include(file)
+@testset "Algebra" begin
+    for file in ["common"]#, "distribution_operations"]
+        include("$file.jl")
     end
 end

@@ -2,8 +2,6 @@ module AcausalNets
     __precompile__()
 
     include_module(module_name::String) = include(joinpath(module_name, string(module_name, ".jl")))
-    # package code goes here
-    include("utils.jl")
 
     include_module("Common")
     include_module("Algebra")
