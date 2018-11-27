@@ -1,7 +1,6 @@
 using QI
 using LinearAlgebra
 
-import QI: permutesystems
 import AcausalNets.Common: Variable
 import AcausalNets.Algebra: eye, star, unstar
 

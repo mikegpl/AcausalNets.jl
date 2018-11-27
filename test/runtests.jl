@@ -1,4 +1,5 @@
 using AcausalNets
+using QI
 using Test
 
 all_tests = vcat("Algebra", "Common", "Structures")
