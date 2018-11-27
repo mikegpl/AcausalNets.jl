@@ -7,7 +7,7 @@ Algebra:
 using AcausalNets.Algebra
 
 @testset "Algebra" begin
-    for file in ["common"]#, "distribution_operations"]
+    for file in ["common", "distribution_operations"]
         include("$file.jl")
     end
 end
