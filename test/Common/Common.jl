@@ -4,8 +4,9 @@ Common:
 - Author: mikegpl
 - Date: 2018-11-16
 =#
+using AcausalNets.Common
 
-module Common
+@testset "Common" begin
     for file in ["sets.jl", "variables.jl"]
         include(file)
     end
