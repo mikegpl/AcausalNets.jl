@@ -28,6 +28,7 @@ distribution(ds::DiscreteSystem) = ds.distribution
 
 parents_names(ds::DiscreteSystem) = [p.name for p in parents(ds)]
 variables_names(ds::DiscreteSystem) = [v.name for v in variables(ds)]
+
 function Base.string(ds::DiscreteSystem, verbose::Bool=true)
     result_str = join([string(n) for n in variables_names(ds)], ",")
     if verbose
@@ -36,6 +37,13 @@ function Base.string(ds::DiscreteSystem, verbose::Bool=true)
     end
     return result_str
 end
+
+function Base.:(==)(ds1::DiscreteSystem, ds2::DiscreteSystem)
+	return ds1.variables == ds2.variables && ds1.parents == ds2.parents && ds1.distribution == ds2.distribution
+end
+
+Base.isequal(ds1::DiscreteSystem, ds2::DiscreteSystem) = ds1 == ds2
+Base.hash(ds::DiscreteSystem, h::UInt) = hash(ds.variables, hash(ds.parents, hash(ds.distribution, hash(:DiscreteSystem, h))))
 
 relevant_variables(system::DiscreteSystem) = vcat(system.parents, system.variables)
 

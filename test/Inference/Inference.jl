@@ -5,8 +5,8 @@ Inference:
 - Date: 2018-11-16
 =#
 
-module Inference
-    for file in ["clusterization.jl", "evidence.jl", "inference_api.jl", "infer_naive.jl"] # todo belief and join_tree
-        include(file)
-    end
+@testset "Inference" begin
+#     for file in ["clusterization.jl", "evidence.jl", "inference_api.jl", "infer_naive.jl"]
+#         include(file)
+#     end
 end
