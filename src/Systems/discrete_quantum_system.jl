@@ -1,5 +1,6 @@
 using QuantumInformation
 using LinearAlgebra
+
 import AcausalNets.Common: Variable
 import AcausalNets.Algebra: eye, star, unstar
 
