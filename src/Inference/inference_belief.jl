@@ -6,7 +6,7 @@ belief_inferrer:
 =#
 
  using LightGraphs
- using QI
+ using QuantumInformation
 
  import AcausalNets.Systems:
      ncategories,

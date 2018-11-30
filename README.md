@@ -21,6 +21,6 @@ With the exception of the packages listed below, all dependencies can be added v
 To successfully install and run `AcausalNets.jl`, you must also check out in `Pkg` the following repositories 
 for development:
 
-- https://github.com/ZKSI/QI.jl
+- https://github.com/ZKSI/QuantumInformation.jl
 
 With other versions of the above packages, we don't guarantee successful installation and/or accurate results.

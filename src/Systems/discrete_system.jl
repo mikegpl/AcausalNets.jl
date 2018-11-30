@@ -134,7 +134,7 @@ shallowcopy(ds::DiscreteSystem{D}) where D = DiscreteSystem{D}(
     deepcopy(distribution(ds))
     )
 
-# not to confuse with QI's permute_systems - this is a higher-level implementation
+# not to confuse with QuantumInformation's permute_systems - this is a higher-level implementation
 function permute_system(ds::DiscreteSystem{D}, new_parent_indexing::Vector{Int64}, new_variable_indexing::Vector{Int64}) where D
     new_indexing = vcat(new_parent_indexing, new_variable_indexing .+ length(parents(ds)))
     dimensions = [ncategories(v) for v in relevant_variables(ds)]

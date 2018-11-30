@@ -6,7 +6,7 @@ join_tree:
 =#
 using LightGraphs
 using LinearAlgebra
-using QI
+using QuantumInformation
 
 import AcausalNets.Common:
     Variable,

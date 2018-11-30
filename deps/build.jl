@@ -6,6 +6,6 @@ build:
 =#
 using Pkg
 
-if !("QI" in keys(Pkg.installed()))
-    Pkg.clone("https://github.com/ZKSI/QI.jl")
+if !("QuantumInformation" in keys(Pkg.installed()))
+    Pkg.clone("https://github.com/ZKSI/QuantumInformation.jl")
 end

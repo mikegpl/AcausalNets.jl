@@ -11,7 +11,7 @@ git:
   depth: 99999999
 
 script:
-  # install custom QI.jl fork
-  - julia -e 'using Pkg; Pkg.clone("https://github.com/mprzewie/QI.jl")'
+  # install unstable pack QuantumInformation.jl
+  - julia -e 'using Pkg; Pkg.clone("https://github.com/mprzewie/QuantumInformation.jl")'
   # proceed with regular building process
   - julia -e 'using Pkg; Pkg.build("AcausalNets"); Pkg.add("Test"); Pkg.test("AcausalNets"; coverage=true)'
