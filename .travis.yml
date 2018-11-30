@@ -12,6 +12,6 @@ git:
 
 script:
   # install unstable pack QuantumInformation.jl
-  - julia -e 'using Pkg; Pkg.clone("https://github.com/mprzewie/QuantumInformation.jl")'
+  - julia -e 'using Pkg; Pkg.clone("https://github.com/ZKSI/QuantumInformation.jl")'
   # proceed with regular building process
   - julia -e 'using Pkg; Pkg.build("AcausalNets"); Pkg.add("QuantumInformation"); Pkg.add("Test"); Pkg.test("AcausalNets"; coverage=true)'
