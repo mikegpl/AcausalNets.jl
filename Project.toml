@@ -5,10 +5,11 @@ version = "0.0.0"
 
 [deps]
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
+Convex = "f65535da-76fb-5f13-bab9-19810c17039a"
 GraphPlot = "a2cc645c-3eea-5389-862e-a155d0052231"
 LightGraphs = "093fc24a-ae57-5d10-9952-331d41423f4d"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-QuantumInformation = "cfb779d8-dc69-11e8-2b1e-47fdb385957e"
+QuantumInformation = "3c0b384b-479c-5684-b2ef-9d7a46dd931e"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SCS = "c946c3f1-0d1f-5ce8-9dea-7daa1f7e2d13"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
