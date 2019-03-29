@@ -115,5 +115,7 @@ end
 
 function mutual_system(from::S, to::S) where {D, S <: DiscreteSystem{D}}
     # TODO implement, move to Systems module
+    # equations (32) and (34) from https://arxiv.org/pdf/0708.1337.pdf
+    # might be useful here
     identity_system(from)
 end
