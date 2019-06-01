@@ -36,12 +36,23 @@ import AcausalNets.Inference:
     Evidence,
     apply_evidence
 
+
+"""
+The Join Tree structure, as described in http://pages.cs.wisc.edu/~dpage/ijar95.pdf
+both vertices and edges ("sepsets") are mapped to a DiscreteSystem, but we only use the systems
+in vertices for belief propagation.
+Perhaps systems with mutual proabililites should go to the edges?
+"""
 struct JoinTree{S <: DiscreteSystem}
     graph::Graph
     vertex_to_cluster::Dict{Int64, S}
     edge_to_sepset::Dict{Set{Int}, S}
 end
 
+"""
+performs steps described in sections 4.1 - 5.2 with 6.3
+of http://pages.cs.wisc.edu/~dpage/ijar95.pdf
+"""
 function unpropagated_join_tree(dbn::DiscreteBayesNet{S},
         vars_to_infer::Vector{Variable},
         observations::Vector{E} = E[]
@@ -64,6 +75,10 @@ function unpropagated_join_tree(dbn::DiscreteBayesNet{S},
     observations_jt
 end
 
+"""
+Builds a Join Tree
+http://pages.cs.wisc.edu/~dpage/ijar95.pdf, section 4.4
+"""
 function JoinTree(cliques::Vector{Vector{S}}, dbn::DiscreteBayesNet{S})::JoinTree{S} where S
     candidate_sepsets = []
     trees = Dict([c => Set([c]) for c in cliques])
@@ -124,6 +139,9 @@ end
 
 const ParentCliquesDict{S} = Dict{S, Vector{S}}
 
+"""Chooses a parent clique in the join tree for each system in Bayes net
+http://pages.cs.wisc.edu/~dpage/ijar95.pdf, section 5.2
+"""
 function parent_cliques_dict(cliques::Vector{Vector{S}}, dbn::DiscreteBayesNet{S})::ParentCliquesDict{S} where S
     Dict([
         sys => first([
@@ -133,6 +151,9 @@ function parent_cliques_dict(cliques::Vector{Vector{S}}, dbn::DiscreteBayesNet{S
     ])
 end
 
+"""A uitility function which returns the system if the clique has been designated as its parent clique
+or a system with the same variables, but with an identity matrix as density matrix
+if the clique is not the parent clique"""
 function sys_or_id(system::S, clique::Vector{S}, parent_cliques::ParentCliquesDict{S})::S where S
     if parent_cliques[system] == clique
         return system
@@ -141,6 +162,7 @@ function sys_or_id(system::S, clique::Vector{S}, parent_cliques::ParentCliquesDi
     end
 end
 
+"""Builds a Join Tree vertex from a cluster (clique) of variables"""
 function Cluster(systems::Vector{S})::S where S
     all_variables = Variable[]
     all_parents = Variable[]
@@ -150,7 +172,6 @@ function Cluster(systems::Vector{S})::S where S
             push!(all_variables, v)
         end
     end
-#     systems = S[sub_system(s, [v for v in variables(s) if v in all_variables]) for s in systems]
     for s in systems
         all([p in all_variables for p in parents(s)]) ||
             error("parents of system $variables(sys) outside cluster!")
@@ -158,6 +179,7 @@ function Cluster(systems::Vector{S})::S where S
     merge_systems(systems)
 end
 
+"""Normalizes density matrices of vertices and edges in the JoinTree, so that their traces are 1"""
 function normalize(jt::JoinTree{S}) where S
     JoinTree(
         jt.graph,
@@ -182,6 +204,12 @@ end
 
 const MoralGraph = Graph
 
+
+"""
+moralization of the graph
+http://pages.cs.wisc.edu/~dpage/ijar95.pdf
+(section 4.1`)
+"""
 function moral_graph(dbn::DiscreteBayesNet)::MoralGraph
     result = MoralGraph(deepcopy(dbn.dag))
     for sys in systems(dbn)
@@ -198,6 +226,15 @@ function moral_graph(dbn::DiscreteBayesNet)::MoralGraph
     return result
 end
 
+
+"""
+step which is not specified in the article an introduced by us
+after moralization we make sure there is a clique of systems we want to infer,
+as this clique will later become one of the vertices in the junction tree
+since we can only infer a system of variables which are in the same vertex of the join tree
+we need to make sure all of the variables which interest us will end up in the same vertex
+note: this can result in a sub-optimal join tree
+"""
 function enforce_clique(dbn::DiscreteBayesNet, mg::MoralGraph, vars_to_infer::Vector{Variable}=Variable[])::MoralGraph
     mg_enforced = deepcopy(mg)
     inferred_nodes = [variable_to_node(v, dbn) for v in vars_to_infer]
@@ -213,6 +250,11 @@ end
 
 const TriangulatedGraph = Graph
 
+"""
+Triangulation of the graph and identification of cliques in triangulted graph
+http://pages.cs.wisc.edu/~dpage/ijar95.pdf
+(section 4.2 and 4.3)
+"""
 function triangulate(mg::MoralGraph, dbn::DiscreteBayesNet{S})::Tuple{TriangulatedGraph, Vector{Vector{S}}} where S
     mg_copy = [false for _ in vertices(mg)]
     mg = deepcopy(mg)
@@ -269,6 +311,12 @@ function triangulate(mg::MoralGraph, dbn::DiscreteBayesNet{S})::Tuple{Triangulat
     return mg, cliques
 end
 
+
+"""
+Applies observations to a Join Tree, whose vertices have been initialized
+Observations about variables are applied only to the vertices which are initialized with probabilities
+of those variables (so evidence of each variable is applied only to the vertex which had been designated as its "parent cliuqe"
+"""
 function apply_observations(
         jt::JoinTree{S},
         parent_cliques_dict::ParentCliquesDict{S},

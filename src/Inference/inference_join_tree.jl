@@ -41,6 +41,19 @@ import AcausalNets.Inference:
     unpropagated_join_tree
 
 
+"""
+Implementation of inference as described in
+http://pages.cs.wisc.edu/~dpage/ijar95.pdf
+
+Turns out it doesn't work on quantum networks (only on classical ones), but yields identical results
+to inference through belief propagation (which also doesn't work on quantum networks yet).
+
+The difference between this and Belief Propagation is that in this implementation, *all* vertices of join tree
+update their states, whereas in belief propagation, only the vertex we're inferring gathers information and updates
+its state. Therefore, in Belief Propagation, 2 times less messages are sent.
+
+Apart from building join tree, this is probably worthless and may be thrown out.
+"""
 function infer_join_tree(
         dbn::DiscreteBayesNet{S},
         vars_to_infer::Vector{Variable},
@@ -78,7 +91,9 @@ function infer_join_tree(
     inference_result, intermediate_elements
 end
 
-
+"""
+Message passing, as described in http://pages.cs.wisc.edu/~dpage/ijar95.pdf
+"""
 function single_message_pass(from_ind::Int, to_ind::Int, jt::JoinTree{S}) where S
     if (from_ind, to_ind) in edges(jt.graph)
         jt = shallowcopy(jt)
@@ -106,7 +121,9 @@ function single_message_pass(from_ind::Int, to_ind::Int, jt::JoinTree{S}) where 
     return jt
 end
 
-
+"""
+Collect-evidence stage
+"""
 function collect_evidence(cluster_ind::Int, cluster_marks::Vector{Bool}, jt::JoinTree)
     jt = shallowcopy(jt)
     cluster_marks[cluster_ind] = false
@@ -121,6 +138,9 @@ function collect_evidence(cluster_ind::Int, cluster_marks::Vector{Bool}, jt::Joi
 
 end
 
+"""
+Distribute-evidence stage
+"""
 function distribute_evidence(cluster_ind::Int, cluster_marks::Vector{Bool}, jt::JoinTree)
     jt = shallowcopy(jt)
     cluster_marks[cluster_ind] = false
@@ -138,6 +158,9 @@ function distribute_evidence(cluster_ind::Int, cluster_marks::Vector{Bool}, jt::
     jt, cluster_marks
 end
 
+"""
+Propagation of messages
+"""
 function global_propagation(jt::JoinTree, start_ind=1)
     jt = shallowcopy(jt)
     cluster_marks = [true for k in keys(jt.vertex_to_cluster)]

@@ -37,6 +37,20 @@ import AcausalNets.Common:
     ncategories
 
 
+# implementation of inference through Belief Propagation as described in
+# http://www.merl.com/publications/docs/TR2001-22.pdf
+# with an attempt to generalize it as described in https://arxiv.org/abs/0708.1337
+# this arlorithm utilizes the join tree and then passes the messages between its vertices
+# doesn't work properly in quantum networks'
+
+"""
+Inference through belief propagation
+
+* a Join tree is built
+* a vertex which contains all variables to infer is chosen from the JT (enforce_clique guarantees that such a vertex exists)
+* belief about this vertex is calculated
+* variables which don't interest us are traced out
+"""
 function infer_belief(
         dbn::DiscreteBayesNet{S},
         vars_to_infer::Vector{Variable},
@@ -73,6 +87,11 @@ function infer_belief(
     return inference_result, intermediate_elements
 end
 
+"""
+a message between two vertices of the join tree
+as defined in https://arxiv.org/pdf/0708.1337.pdf
+(eq 103)
+"""
 function message(jt::JoinTree{S}, from::Int, to::Int, t::Int) where S
     from_neighbors = neighbors(jt.graph, from)
     to in from_neighbors || error("$from and $to are not neighbors!")
@@ -81,7 +100,6 @@ function message(jt::JoinTree{S}, from::Int, to::Int, t::Int) where S
     end
     from_system = jt.vertex_to_cluster[from] # (u_u)a
     to_system = jt.vertex_to_cluster[to]
-    # equation 103 craziness
     previous_messages =  vcat(
         [identity_system(from_system)],
         S[message(jt, n, from, t-1) for n in from_neighbors if n !=to]
@@ -90,7 +108,7 @@ function message(jt::JoinTree{S}, from::Int, to::Int, t::Int) where S
                     distribution(from_system),
                     multiply_star(
                         prod([distribution(m) for m in previous_messages]),
-                        distribution(mutual_system(from_system, to_system))
+                        distribution(mutual_system(from_system, to_system)) # ν_u:v, which we are not sure how to implement
                     )
     )
     msg_from = S(variables(from_system), msg_distribution)
@@ -99,6 +117,11 @@ function message(jt::JoinTree{S}, from::Int, to::Int, t::Int) where S
     S(variables(msg_to), normalized_dist)
 end
 
+"""
+belief about the vertex (cluster) of a join tree in itme t
+as defined in https://arxiv.org/pdf/0708.1337.pdf
+(eq 104)
+"""
 function belief(jt::JoinTree{S}, cluster_ind::Int, t::Int)::S where S
     sys = jt.vertex_to_cluster[cluster_ind]
     messages = vcat(

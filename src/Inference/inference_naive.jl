@@ -14,6 +14,20 @@ import AcausalNets.Systems:
 import AcausalNets.Inference:
     apply_evidence
 
+"""
+Naive inference:
+* build a single density matrix of the whole network
+* apply evidence
+* trace out the variables which are not to be inferred
+
+Pros:
++ yields results consistent with https://arxiv.org/pdf/1504.01917.pdf,
+which makes us assume that this inference works correctly on quantum networks
+
+Cons:
+- density matrix grows exponentially with the size of the network we infer on, so this is unusable
+with larger networks
+"""
 function infer_naive(
         dbn::DiscreteBayesNet{S},
         vars_to_infer::Vector{Variable},

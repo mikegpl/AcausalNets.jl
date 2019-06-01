@@ -1,3 +1,5 @@
+
+# the identifier of a random variable
 struct Variable
     name        ::VariableName
     ncategories ::Int

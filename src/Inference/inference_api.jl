@@ -12,6 +12,10 @@ import AcausalNets.Inference:
 import AcausalNets.Structures:
     DiscreteBayesNet
 
+"""
+the most accessible inference function
+inference strategy is configurable
+"""
 function infer(
         dbn::DiscreteBayesNet{S},
         vars_to_infer::Vector{Variable},

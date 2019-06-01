@@ -7,9 +7,11 @@ distribution_operations:
 
 using LinearAlgebra
 
-# as defined in
-# https://arxiv.org/pdf/0708.1337.pdf
-# (equation 29)
+"""
+as defined in
+https://arxiv.org/pdf/0708.1337.pdf
+(equation 29)
+"""
 function star_n(n::Float64)
     a_pow = 1 / (2 * n)
     b_pow = 1 / n
@@ -19,10 +21,18 @@ end
 
 const star = star_n(1.0)
 
-# as defined in
-# https://arxiv.org/pdf/0708.1337.pdf
-# (equation 32)
+"""
+as defined in
+https://arxiv.org/pdf/0708.1337.pdf
+(equation 32)
+"""
 unstar(C, B)::AbstractMatrix = star(pinv(B), C) # odwrotność star (za #6)
 
+
+"""
+application of evidence
+https://arxiv.org/abs/1504.01917
+(eq 5)
+"""
 event(system::AbstractMatrix, e::AbstractMatrix) = (e * system * e) / tr(e * system)
 
