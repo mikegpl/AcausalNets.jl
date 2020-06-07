@@ -105,17 +105,19 @@ function JoinTree(cliques::Vector{Vector{S}}, dbn::DiscreteBayesNet{S})::JoinTre
     candidate_sepsets = sort(candidate_sepsets, by=c -> sepset_comparator(cliques[c[1]], cliques[c[2]]))
     i = 1
     n = length(cliques)
-
-    while length(chosen_sepsets) < n-1
+    created_edges = 0
+    while created_edges < n-1
         i1, i2 = candidate_sepsets[i]
         c1, c2 = cliques[i1], cliques[i2]
         sepset = [s for s in systems(dbn) if s in intersect(c1, c2)]
-        if (trees[c1] != trees[c2]) && !any([sepset==s for s in chosen_sepsets])
+        if isempty(intersect(trees[c1], trees[c2]))
             push!(chosen_sepsets, sepset)
-            trees[c1] = trees[c2] = union(trees[c1], trees[c2])
+            union_tree = union(trees[c1], trees[c2])
+            [trees[tree_elem] = union_tree for  tree_elem in union_tree]
             add_edge!(jt.graph, i1, i2)
             sepset_variables = reduce(vcat, [variables(s) for s in sepset])
             push!(jt.edge_to_sepset, Set([i1, i2]) => identity_system(S, sepset_variables))
+            created_edges += 1
         end
         i += 1
     end
