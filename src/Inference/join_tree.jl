@@ -227,6 +227,24 @@ function moral_graph(dbn::DiscreteBayesNet)::MoralGraph
 end
 
 
+function enforce_clique_for_quantum_systes(dbn::DiscreteBayesNet, mg::MoralGraph)
+    for sys in systems(dbn)
+        if(!isdiag(sys.distribution))
+            quantum_node = system_to_node(sys, dbn)
+            clique = union(all_neighbors(dbn.dag, system_to_node(sys, dbn)), quantum_node)
+
+            for c1 in clique
+                for c2 in clique
+                    if c1 > c2
+                        add_edge!(mg, c1, c2)
+                    end
+                end
+            end
+        end
+    end
+end
+
+
 """
 step which is not specified in the article an introduced by us
 after moralization we make sure there is a clique of systems we want to infer,
@@ -245,6 +263,9 @@ function enforce_clique(dbn::DiscreteBayesNet, mg::MoralGraph, vars_to_infer::Ve
             end
         end
     end
+
+    enforce_clique_for_quantum_systes(dbn, mg_enforced)
+
     return mg_enforced
 end
 
